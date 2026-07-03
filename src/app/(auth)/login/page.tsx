@@ -63,12 +63,14 @@ function Login() {
         control={control}
         rules={{ required: "이메일을 입력해주세요." }}
         render={({ field }) => (
-          <Input label="이메일" value={field.value} onChange={field.onChange} />
+          <Input
+            label="이메일"
+            value={field.value}
+            onChange={field.onChange}
+            errorMessage={errors.email?.message}
+          />
         )}
       />
-      {errors.email && (
-        <p className="text-sm mt-0.5 text-red-500">{errors.email.message}</p>
-      )}
 
       <Controller
         name="password"
@@ -82,14 +84,11 @@ function Login() {
             type="password"
             value={field.value}
             onChange={field.onChange}
-            required
             className="mt-4"
+            errorMessage={errors.password?.message}
           />
         )}
       />
-      {errors.password && (
-        <p className="text-sm mt-0.5 text-red-500">{errors.password.message}</p>
-      )}
       <p className="text-right pt-2 text-sm">
         계정이 없으신가요? <Link href="/sign-up">회원가입</Link>
       </p>

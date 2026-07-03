@@ -10,6 +10,7 @@ import { Controller, useForm } from "react-hook-form";
 type SignUpForm = {
   email: string;
   password: string;
+  passwordConfirm: string;
   nickName: string;
 };
 
@@ -19,11 +20,13 @@ function SignUp() {
   const {
     control,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<SignUpForm>({
     defaultValues: {
       email: "",
       password: "",
+      passwordConfirm: "",
       nickName: "",
     },
   });
@@ -88,12 +91,10 @@ function SignUp() {
             value={field.value}
             onChange={field.onChange}
             required
+            errorMessage={errors.email?.message}
           />
         )}
       />
-      {errors.email && (
-        <p className="text-sm mt-0.5 text-red-500">{errors.email.message}</p>
-      )}
 
       <Controller
         name="password"
@@ -113,12 +114,31 @@ function SignUp() {
             onChange={field.onChange}
             required
             className="mt-4"
+            errorMessage={errors.password?.message}
           />
         )}
       />
-      {errors.password && (
-        <p className="text-sm mt-0.5 text-red-500">{errors.password.message}</p>
-      )}
+
+      <Controller
+        name="passwordConfirm"
+        control={control}
+        rules={{
+          required: "비밀번호 확인을 입력해주세요.",
+          validate: (value) =>
+            value === watch("password") || "비밀번호가 일치하지 않습니다.",
+        }}
+        render={({ field }) => (
+          <Input
+            label="비밀번호 확인"
+            type="password"
+            value={field.value}
+            onChange={field.onChange}
+            required
+            className="mt-4"
+            errorMessage={errors.passwordConfirm?.message}
+          />
+        )}
+      />
 
       <Controller
         name="nickName"
@@ -133,10 +153,10 @@ function SignUp() {
             onChange={field.onChange}
             required
             className="mt-4"
+            errorMessage={errors.nickName?.message}
           />
         )}
       />
-      {errors.nickName && <p>{errors.nickName.message}</p>}
 
       <div className="text-right mt-4">
         <Button
