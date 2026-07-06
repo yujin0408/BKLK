@@ -14,10 +14,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`h-full antialiased ${pretendard.variable}`}>
-      <body className="min-h-full flex flex-col">
+    <html lang="ko" className={`h-full antialiased ${pretendard.variable}`}>
+      <body className="min-h-full flex flex-col font-pretendard">
         <Header />
-        <div className="pt-15">{children}</div>
+        <main className="pt-15 w-full max-w-350 mx-auto">{children}</main>
       </body>
     </html>
   );

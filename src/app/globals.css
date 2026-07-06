@@ -2,7 +2,7 @@
 
 @theme {
   /* Font Family */
-  --font-sans: var(--font-pretendard);
+  --font-pretendard: var(--font-pretendard-next);
 
   /* Typography */
   --text-xs: 12px;
