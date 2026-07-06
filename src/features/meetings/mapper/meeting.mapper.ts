@@ -7,7 +7,7 @@ export const mapMeeting = (meeting: MeetingEntity): MeetingCardData => ({
   title: meeting.title,
   thumbnail: meeting.thumbnail_url ?? DEFAULT_THUMBNAIL,
   meetingAt: new Date(meeting.meeting_at).toLocaleDateString("ko-KR"),
-  capacity: `${meeting.current_participants} / ${meeting.capacity}명`,
-  region: `${meeting.region_1depth_name} · ${meeting.region_2depth_name}`,
+  capacity: `${meeting.current_participants}/${meeting.capacity}`,
+  region: `${meeting.region_1depth_name} ${meeting.region_2depth_name}`,
   status: meeting.status,
 });
