@@ -1,14 +1,23 @@
 "use client";
 
+import Dropdown from "@/components/common/Dropdown";
 import MeetingCard from "@/components/common/MeetingCard";
 import SearchInput from "@/components/common/SearchInput";
 import { getMeetings } from "@/features/meetings/api/getMeetings";
 import { MeetingCardData } from "@/features/meetings/types";
 import { useEffect, useState } from "react";
 
+const options = [
+  { label: "전체", value: "all" },
+  { label: "모집중", value: "recruiting" },
+  { label: "마감임박", value: "admission_closing" },
+  { label: "모집마감", value: "closed" },
+];
+
 export default function Meetings() {
   const [meetings, setMeetings] = useState<MeetingCardData[]>([]);
   const [keyword, setKeyword] = useState("");
+  const [value, setValue] = useState("all");
 
   useEffect(() => {
     const fetchMeetings = async () => {
@@ -31,7 +40,9 @@ export default function Meetings() {
         placeholder="모임을 검색해보세요"
       />
       <div>
-        <div>필터</div>
+        <div>
+          <Dropdown options={options} value={value} onChange={setValue} />
+        </div>
         <div>정렬</div>
       </div>
       <div className="flex gap-6 mt-6">
