@@ -20,6 +20,7 @@ function SearchInput({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
+        aria-label={placeholder}
         className="h-11 w-full rounded-lg border border-line-100 px-10 text-sm outline-none placeholder:text-gray-400 focus:border-brand-primary"
       />
     </div>

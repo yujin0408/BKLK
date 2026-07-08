@@ -31,8 +31,8 @@ export default function Meetings() {
         placeholder="모임을 검색해보세요"
       />
       <div>
-        <div></div>
-        <div></div>
+        <div>필터</div>
+        <div>정렬</div>
       </div>
       <div className="flex gap-6 mt-6">
         {meetings.map((meeting) => (
