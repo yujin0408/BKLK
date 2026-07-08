@@ -33,6 +33,7 @@ interface InputProps
   onChange?: (value: string) => void;
   errorMessage?: string;
   successMessage?: string;
+  inputClassName?: string;
 }
 
 export default function Input({
@@ -48,6 +49,7 @@ export default function Input({
   errorMessage,
   successMessage,
   onClick,
+  inputClassName,
   ...props
 }: InputProps) {
   const inputState = errorMessage
@@ -72,7 +74,7 @@ export default function Input({
         onChange={(e) => onChange?.(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
-        className={inputVariants({ state: inputState })}
+        className={cn(inputVariants({ state: inputState }), inputClassName)}
         onClick={onClick}
       />
 

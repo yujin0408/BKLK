@@ -7,7 +7,6 @@ import SearchInput from "@/components/common/SearchInput";
 import { getMeetings } from "@/features/meetings/api/getMeetings";
 import { MeetingCardData } from "@/features/meetings/types";
 import { useEffect, useState } from "react";
-import { DayPicker } from "react-day-picker";
 
 const options = [
   { label: "전체", value: "all" },
@@ -45,7 +44,7 @@ export default function Meetings() {
       <div>
         <div>
           <Dropdown options={options} value={value} onChange={setValue} />
-          <DatePicker />
+          <DatePicker value={date} onChange={setDate} />
         </div>
         <div>정렬</div>
       </div>
