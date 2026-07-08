@@ -17,7 +17,7 @@ const options = [
 export default function Meetings() {
   const [meetings, setMeetings] = useState<MeetingCardData[]>([]);
   const [keyword, setKeyword] = useState("");
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState("all");
 
   useEffect(() => {
     const fetchMeetings = async () => {

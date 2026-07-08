@@ -1,7 +1,8 @@
 "use client";
 
+import useOutsideClick from "@/hooks/useOutsideClick";
 import { ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 interface Option {
   label: string;
@@ -22,6 +23,11 @@ function Dropdown({
   placeholder = "선택하세요",
 }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useOutsideClick(dropdownRef, () => {
+    setIsOpen(false);
+  });
 
   const selectedOption = options.find((option) => option.value === value);
 
@@ -31,7 +37,7 @@ function Dropdown({
   };
 
   return (
-    <div className="relative w-full">
+    <div ref={dropdownRef} className="relative w-full">
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
@@ -56,7 +62,7 @@ function Dropdown({
               <button
                 type="button"
                 onClick={() => handleSelect(option.value)}
-                className="w-full px-4 py-3 text-left text-sm hover:bg-default cursor-pointer"
+                className="w-full px-4 py-3 text-left text-sm hover:bg-gray-100"
               >
                 {option.label}
               </button>
