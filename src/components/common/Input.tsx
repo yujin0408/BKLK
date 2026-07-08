@@ -30,9 +30,10 @@ interface InputProps
     VariantProps<typeof inputVariants> {
   label?: string;
   value: string;
-  onChange: (value: string) => void;
+  onChange?: (value: string) => void;
   errorMessage?: string;
   successMessage?: string;
+  onClick?: React.MouseEventHandler<HTMLInputElement>;
 }
 
 export default function Input({
@@ -47,6 +48,7 @@ export default function Input({
   state,
   errorMessage,
   successMessage,
+  onClick,
   ...props
 }: InputProps) {
   const inputState = errorMessage
@@ -72,6 +74,7 @@ export default function Input({
         placeholder={placeholder}
         disabled={disabled}
         className={inputVariants({ state: inputState })}
+        onClick={onClick}
       />
 
       {errorMessage && (

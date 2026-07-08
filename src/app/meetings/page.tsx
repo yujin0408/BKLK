@@ -1,11 +1,13 @@
 "use client";
 
+import DatePicker from "@/components/common/Datepicker";
 import Dropdown from "@/components/common/Dropdown";
 import MeetingCard from "@/components/common/MeetingCard";
 import SearchInput from "@/components/common/SearchInput";
 import { getMeetings } from "@/features/meetings/api/getMeetings";
 import { MeetingCardData } from "@/features/meetings/types";
 import { useEffect, useState } from "react";
+import { DayPicker } from "react-day-picker";
 
 const options = [
   { label: "전체", value: "all" },
@@ -18,6 +20,7 @@ export default function Meetings() {
   const [meetings, setMeetings] = useState<MeetingCardData[]>([]);
   const [keyword, setKeyword] = useState("");
   const [value, setValue] = useState("all");
+  const [date, setDate] = useState<Date>();
 
   useEffect(() => {
     const fetchMeetings = async () => {
@@ -42,6 +45,7 @@ export default function Meetings() {
       <div>
         <div>
           <Dropdown options={options} value={value} onChange={setValue} />
+          <DatePicker />
         </div>
         <div>정렬</div>
       </div>
