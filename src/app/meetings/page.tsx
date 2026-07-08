@@ -1,5 +1,6 @@
 "use client";
 
+import DatePicker from "@/components/common/Datepicker";
 import Dropdown from "@/components/common/Dropdown";
 import MeetingCard from "@/components/common/MeetingCard";
 import SearchInput from "@/components/common/SearchInput";
@@ -18,6 +19,7 @@ export default function Meetings() {
   const [meetings, setMeetings] = useState<MeetingCardData[]>([]);
   const [keyword, setKeyword] = useState("");
   const [value, setValue] = useState("all");
+  const [date, setDate] = useState<Date>();
 
   useEffect(() => {
     const fetchMeetings = async () => {
@@ -42,6 +44,7 @@ export default function Meetings() {
       <div>
         <div>
           <Dropdown options={options} value={value} onChange={setValue} />
+          <DatePicker value={date} onChange={setDate} />
         </div>
         <div>정렬</div>
       </div>
