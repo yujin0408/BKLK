@@ -22,21 +22,32 @@ export default function Meetings() {
   const [value, setValue] = useState("all");
   const [date, setDate] = useState<Date>();
   const [regionFilter, setRegionFilter] = useState({
-    region_1depth_name: "",
-    region_2depth_name: "",
+    region_1depth_name: "전체",
+    region_2depth_name: "전체",
   });
 
   useEffect(() => {
+    let ignore = false;
+
     const fetchMeetings = async () => {
       try {
         const response = await getMeetings(regionFilter);
-        setMeetings(response);
+
+        if (!ignore) {
+          setMeetings(response);
+        }
       } catch (error) {
-        console.error("모임 조회 실패", error);
+        if (!ignore) {
+          console.error("모임 조회 실패", error);
+        }
       }
     };
 
     fetchMeetings();
+
+    return () => {
+      ignore = true;
+    };
   }, [regionFilter]);
 
   return (

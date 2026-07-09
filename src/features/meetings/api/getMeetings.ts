@@ -15,7 +15,7 @@ export const getMeetings = async (
     .select("*")
     .order("created_at", { ascending: false });
 
-  if (params?.region_1depth_name) {
+  if (params?.region_1depth_name && params.region_1depth_name !== "전체") {
     query = query.eq("region_1depth_name", params.region_1depth_name);
   }
 
