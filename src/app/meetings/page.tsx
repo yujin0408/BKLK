@@ -4,6 +4,7 @@ import DatePicker from "@/components/common/Datepicker";
 import Dropdown from "@/components/common/Dropdown";
 import MeetingCard from "@/components/common/MeetingCard";
 import SearchInput from "@/components/common/SearchInput";
+import RegionFilter from "@/components/region/RegionFilter";
 import { getMeetings } from "@/features/meetings/api/getMeetings";
 import { MeetingCardData } from "@/features/meetings/types";
 import { useEffect, useState } from "react";
@@ -20,19 +21,34 @@ export default function Meetings() {
   const [keyword, setKeyword] = useState("");
   const [value, setValue] = useState("all");
   const [date, setDate] = useState<Date>();
+  const [regionFilter, setRegionFilter] = useState({
+    region_1depth_name: "전체",
+    region_2depth_name: "전체",
+  });
 
   useEffect(() => {
+    let ignore = false;
+
     const fetchMeetings = async () => {
       try {
-        const response = await getMeetings();
-        setMeetings(response);
+        const response = await getMeetings(regionFilter);
+
+        if (!ignore) {
+          setMeetings(response);
+        }
       } catch (error) {
-        console.error("모임 조회 실패", error);
+        if (!ignore) {
+          console.error("모임 조회 실패", error);
+        }
       }
     };
 
     fetchMeetings();
-  }, []);
+
+    return () => {
+      ignore = true;
+    };
+  }, [regionFilter]);
 
   return (
     <div className="w-full pt-5">
@@ -45,6 +61,7 @@ export default function Meetings() {
         <div>
           <Dropdown options={options} value={value} onChange={setValue} />
           <DatePicker value={date} onChange={setDate} />
+          <RegionFilter value={regionFilter} onChange={setRegionFilter} />
         </div>
         <div>정렬</div>
       </div>

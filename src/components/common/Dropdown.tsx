@@ -14,6 +14,7 @@ interface DropdownProps {
   options: Option[];
   onChange: (value: string) => void;
   placeholder?: string;
+  disabled?: boolean;
 }
 
 function Dropdown({
@@ -21,6 +22,7 @@ function Dropdown({
   options,
   onChange,
   placeholder = "선택하세요",
+  disabled,
 }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -41,9 +43,10 @@ function Dropdown({
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
+        disabled={disabled}
         className={`flex w-full items-center justify-between rounded-lg border bg-white px-4 py-3 text-sm ${
-          isOpen ? "border-blue-500" : "border-gray-300"
-        }`}
+          disabled ? "cursor-not-allowed bg-gray-100 text-gray-400" : "bg-white"
+        } ${isOpen ? "border-blue-500" : "border-gray-300"}`}
       >
         <span className={selectedOption ? "text-black" : "text-gray-400"}>
           {selectedOption?.label ?? placeholder}
@@ -56,7 +59,7 @@ function Dropdown({
       </button>
 
       {isOpen && (
-        <ul className="absolute top-full z-10 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-md">
+        <ul className="absolute top-full z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-md">
           {options.map((option) => (
             <li key={option.value}>
               <button
