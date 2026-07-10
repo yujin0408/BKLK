@@ -44,6 +44,7 @@ export default function RegionFilter({ value, onChange }: Props) {
             region_2depth_name: "전체",
           });
         }}
+        width="w-[150px]"
       />
 
       <Dropdown
@@ -57,6 +58,7 @@ export default function RegionFilter({ value, onChange }: Props) {
             region_2depth_name: region2,
           });
         }}
+        width="w-[150px]"
       />
     </div>
   );
