@@ -15,6 +15,8 @@ interface DropdownProps {
   onChange: (value: string) => void;
   placeholder?: string;
   disabled?: boolean;
+  className?: string;
+  width?: string;
 }
 
 function Dropdown({
@@ -23,6 +25,8 @@ function Dropdown({
   onChange,
   placeholder = "선택하세요",
   disabled,
+  className,
+  width = "w-full",
 }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -39,14 +43,14 @@ function Dropdown({
   };
 
   return (
-    <div ref={dropdownRef} className="relative w-full">
+    <div ref={dropdownRef} className={`relative ${width}`}>
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         disabled={disabled}
         className={`flex w-full items-center justify-between rounded-lg border bg-white px-4 py-3 text-sm ${
           disabled ? "cursor-not-allowed bg-gray-100 text-gray-400" : "bg-white"
-        } ${isOpen ? "border-blue-500" : "border-gray-300"}`}
+        } ${isOpen ? "border-active" : "border-gray-100"} ${className || ""}`}
       >
         <span className={selectedOption ? "text-black" : "text-gray-400"}>
           {selectedOption?.label ?? placeholder}

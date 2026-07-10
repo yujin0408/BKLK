@@ -41,11 +41,11 @@ function DatePicker({ value, onChange }: DatePickerProps) {
           }}
           aria-haspopup="dialog"
           aria-expanded={isOpen}
-          inputClassName="cursor-pointer"
+          inputClassName="cursor-pointer h-[42px] w-[150px]"
         />
 
         <CalendarDays
-          size={20}
+          size={18}
           className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
         />
       </div>
