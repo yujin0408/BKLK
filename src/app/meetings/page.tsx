@@ -34,6 +34,8 @@ export default function Meetings() {
     region_2depth_name: "전체",
   });
   const [debouncedKeyword, setDebouncedKeyword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -47,6 +49,9 @@ export default function Meetings() {
     let ignore = false;
 
     const fetchMeetings = async () => {
+      setIsLoading(true);
+      setError(null);
+
       try {
         const response = await getMeetings({
           keyword: debouncedKeyword || undefined,
@@ -68,6 +73,12 @@ export default function Meetings() {
       } catch (error) {
         if (!ignore) {
           console.error("모임 조회 실패", error);
+          setMeetings([]);
+          setError("모임 목록을 불러오지 못했습니다.");
+        }
+      } finally {
+        if (!ignore) {
+          setIsLoading(false);
         }
       }
     };
@@ -136,7 +147,15 @@ export default function Meetings() {
           </p>
         </div>
 
-        {meetings.length > 0 ? (
+        {isLoading ? (
+          <div className="mt-4 flex min-h-64 items-center justify-center">
+            <p className="text-sm text-gray-400">모임을 불러오는 중입니다.</p>
+          </div>
+        ) : error ? (
+          <div className="mt-4 flex min-h-64 items-center justify-center rounded-xl border border-error">
+            <p className="text-sm text-error">{error}</p>
+          </div>
+        ) : meetings.length > 0 ? (
           <div className="mt-4 grid grid-cols-1 gap-x-5 gap-y-8 md:grid-cols-2 xl:grid-cols-3">
             {sortedMeetings.map((meeting) => (
               <MeetingCard key={meeting.id} data={meeting} />
