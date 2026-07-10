@@ -9,6 +9,10 @@ interface GetMeetingsParams {
   region_2depth_name?: string;
 }
 
+function escapeLikePattern(value: string) {
+  return value.replace(/[\\%_]/g, "\\$&");
+}
+
 export async function getMeetings(params: GetMeetingsParams = {}) {
   let query = supabase
     .from("meetings")
@@ -16,7 +20,9 @@ export async function getMeetings(params: GetMeetingsParams = {}) {
     .order("created_at", { ascending: false });
 
   if (params.keyword) {
-    query = query.ilike("title", `%${params.keyword}%`);
+    const escapedKeyword = escapeLikePattern(params.keyword.trim());
+
+    query = query.ilike("title", `%${escapedKeyword}%`);
   }
 
   if (params.status) {
