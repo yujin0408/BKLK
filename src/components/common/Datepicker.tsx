@@ -26,6 +26,26 @@ function DatePicker({ value, onChange }: DatePickerProps) {
       ).padStart(2, "0")}`
     : "";
 
+  const closeDatePicker = (restoreFocus = false) => {
+    setIsOpen(false);
+
+    if (restoreFocus) {
+      requestAnimationFrame(() => {
+        datePickerRef.current
+          ?.querySelector<HTMLInputElement>("input")
+          ?.focus();
+      });
+    }
+  };
+
+  const handleEscape = (event: React.KeyboardEvent) => {
+    if (event.key !== "Escape" || !isOpen) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    closeDatePicker(true);
+  };
+
   return (
     <div ref={datePickerRef} className="relative inline-block">
       <div className="relative">
@@ -34,14 +54,18 @@ function DatePicker({ value, onChange }: DatePickerProps) {
           readOnly
           onClick={() => setIsOpen(true)}
           placeholder="YYYY.MM.DD"
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
               setIsOpen(true);
+              return;
             }
+
+            handleEscape(event);
           }}
           aria-haspopup="dialog"
           aria-expanded={isOpen}
-          inputClassName="cursor-pointer h-[42px] w-[150px]"
+          inputClassName="h-[42px] w-[150px] cursor-pointer"
         />
 
         <CalendarDays
@@ -51,13 +75,18 @@ function DatePicker({ value, onChange }: DatePickerProps) {
       </div>
 
       {isOpen && (
-        <div className="absolute left-0 top-full z-10 mt-2 rounded-2xl border border-gray-200 bg-white p-5 shadow-md">
+        <div
+          role="dialog"
+          aria-label="날짜 선택"
+          onKeyDown={handleEscape}
+          className="absolute left-0 top-full z-10 mt-2 rounded-2xl border border-gray-200 bg-white p-5 shadow-md"
+        >
           <DayPicker
             mode="single"
             selected={value}
             onSelect={(selectedDate) => {
               onChange(selectedDate);
-              setIsOpen(false);
+              closeDatePicker(true);
             }}
             locale={ko}
             showOutsideDays
