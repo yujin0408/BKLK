@@ -10,7 +10,10 @@ interface GetMeetingsParams {
 }
 
 export async function getMeetings(params: GetMeetingsParams = {}) {
-  let query = supabase.from("meetings").select("*");
+  let query = supabase
+    .from("meetings")
+    .select("*")
+    .order("created_at", { ascending: false });
 
   if (params.keyword) {
     query = query.ilike("title", `%${params.keyword}%`);

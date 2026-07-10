@@ -79,6 +79,22 @@ export default function Meetings() {
     };
   }, [debouncedKeyword, value, date, regionFilter]);
 
+  const statusOrder = {
+    recruiting: 0,
+    admission_closing: 1,
+    closed: 2,
+  };
+
+  const sortedMeetings = [...meetings].sort((a, b) => {
+    const statusDiff = statusOrder[a.status] - statusOrder[b.status];
+
+    if (statusDiff !== 0) {
+      return statusDiff;
+    }
+
+    return new Date(b.meetingAt).getTime() - new Date(a.meetingAt).getTime();
+  });
+
   return (
     <main className="mx-auto w-full max-w-[1280px] px-6 pb-16 pt-10">
       <header>
@@ -122,7 +138,7 @@ export default function Meetings() {
 
         {meetings.length > 0 ? (
           <div className="mt-4 grid grid-cols-1 gap-x-5 gap-y-8 md:grid-cols-2 xl:grid-cols-3">
-            {meetings.map((meeting) => (
+            {sortedMeetings.map((meeting) => (
               <MeetingCard key={meeting.id} data={meeting} />
             ))}
           </div>
