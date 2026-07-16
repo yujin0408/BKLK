@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import { pretendard } from "@/fonts";
+import Footer from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -18,6 +19,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-pretendard">
         <Header />
         <main className="pt-15 w-full max-w-350 mx-auto">{children}</main>
+        <Footer />
       </body>
     </html>
   );
