@@ -1,7 +1,7 @@
 "use client";
 
 import Script from "next/script";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 
 declare global {
   interface Window {
@@ -16,22 +16,26 @@ interface Props {
 
 export default function KakaoMap({ latitude, longitude }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
-
   const appKey = process.env.NEXT_PUBLIC_KAKAO_MAP_KEY;
 
-  useEffect(() => {
-    if (!isScriptLoaded || !window.kakao?.maps || !mapRef.current) {
+  const initializeMap = useCallback(() => {
+    if (!window.kakao?.maps || !mapRef.current) return;
+
+    const lat = Number(latitude);
+    const lng = Number(longitude);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      console.error("잘못된 지도 좌표입니다.", {
+        latitude,
+        longitude,
+      });
       return;
     }
 
     window.kakao.maps.load(() => {
       if (!mapRef.current) return;
 
-      const position = new window.kakao.maps.LatLng(
-        Number(latitude),
-        Number(longitude),
-      );
+      const position = new window.kakao.maps.LatLng(lat, lng);
 
       const map = new window.kakao.maps.Map(mapRef.current, {
         center: position,
@@ -42,13 +46,18 @@ export default function KakaoMap({ latitude, longitude }: Props) {
         map,
         position,
       });
+
+      requestAnimationFrame(() => {
+        map.relayout();
+        map.setCenter(position);
+      });
     });
-  }, [isScriptLoaded, latitude, longitude]);
+  }, [latitude, longitude]);
 
   if (!appKey) {
     return (
-      <div className="flex h-[300px] items-center justify-center">
-        카카오 지도 API 키가 설정되지 않았습니다.
+      <div className="flex h-[400px] w-full items-center justify-center">
+        지도 API 키가 설정되지 않았습니다.
       </div>
     );
   }
@@ -59,11 +68,9 @@ export default function KakaoMap({ latitude, longitude }: Props) {
         id="kakao-map-sdk"
         src={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&autoload=false`}
         strategy="afterInteractive"
-        onLoad={() => {
-          setIsScriptLoaded(true);
-        }}
-        onError={(event) => {
-          console.error("카카오 지도 SDK 로딩 실패", event);
+        onReady={initializeMap}
+        onError={(error) => {
+          console.error("카카오 지도 SDK 로딩 실패", error);
         }}
       />
 
