@@ -251,19 +251,37 @@ function MeetingDetailPage() {
   };
 
   const handleDelete = async () => {
-    const confirmed = window.confirm(
-      "모임을 삭제하시겠어요?\n삭제한 모임은 다시 복구하기 어렵습니다.",
-    );
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser();
 
-    if (!confirmed || isDeleting) {
+    console.log({
+      authUserId: authUser?.id,
+      meetingHostUserId: meeting.host_user_id,
+    });
+    if (!meeting) {
       return;
     }
+
+    if (!user) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    if (user.id !== meeting.host?.id) {
+      alert("모임 작성자만 삭제할 수 있습니다.");
+      return;
+    }
+
+    const confirmed = window.confirm("모임을 삭제하시겠어요?");
+
+    if (!confirmed || isDeleting) return;
 
     try {
       setIsDeleting(true);
       setIsMenuOpen(false);
 
-      await deleteMeeting(meeting?.id || "");
+      await deleteMeeting(meeting.id, user.id);
 
       alert("모임이 삭제되었습니다.");
       router.replace("/meetings");

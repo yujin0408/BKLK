@@ -92,13 +92,14 @@ export async function getMeetingById(id: string) {
 }
 
 // 모임 삭제
-export async function deleteMeeting(meetingId: string) {
+export async function deleteMeeting(meetingId: string, userId: string) {
   const { error } = await supabase
     .from("meetings")
     .update({
       deleted_at: new Date().toISOString(),
     })
-    .eq("id", meetingId);
+    .eq("id", meetingId)
+    .eq("host_user_id", userId);
 
   if (error) {
     throw new Error(error.message);
