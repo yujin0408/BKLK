@@ -13,10 +13,12 @@ function escapeLikePattern(value: string) {
   return value.replace(/[\\%_]/g, "\\$&");
 }
 
+// 모임 목록 조회
 export async function getMeetings(params: GetMeetingsParams = {}) {
   let query = supabase
     .from("meetings")
     .select("*")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   if (params.keyword) {
@@ -54,4 +56,52 @@ export async function getMeetings(params: GetMeetingsParams = {}) {
   }
 
   return (data ?? []).map(mapMeeting);
+}
+
+// 모임 상세 조회
+export async function getMeetingById(id: string) {
+  const { data, error } = await supabase
+    .from("meetings")
+    .select(
+      `
+      *,
+      host:users (
+        id,
+        nickname,
+        profile_image_url,
+        description
+      ),
+      book:books (
+        id,
+        title,
+        author,
+        description,
+        cover_image_url
+      )
+    `,
+    )
+    .eq("id", id)
+    .is("deleted_at", null)
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+}
+
+// 모임 삭제
+export async function deleteMeeting(meetingId: string, userId: string) {
+  const { error } = await supabase
+    .from("meetings")
+    .update({
+      deleted_at: new Date().toISOString(),
+    })
+    .eq("id", meetingId)
+    .eq("host_user_id", userId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }
