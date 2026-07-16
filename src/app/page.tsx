@@ -2,7 +2,7 @@
 "use client";
 
 import MeetingCard from "@/components/common/MeetingCard";
-import { getMeetings } from "@/features/meetings/api/getMeetings";
+import { getMeetings } from "@/features/meetings/api/meetings";
 import { MeetingCardData } from "@/features/meetings/types";
 import { Plus } from "lucide-react";
 import { useEffect, useState } from "react";

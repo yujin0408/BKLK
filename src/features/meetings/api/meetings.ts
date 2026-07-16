@@ -18,6 +18,7 @@ export async function getMeetings(params: GetMeetingsParams = {}) {
   let query = supabase
     .from("meetings")
     .select("*")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
   if (params.keyword) {
@@ -80,6 +81,7 @@ export async function getMeetingById(id: string) {
     `,
     )
     .eq("id", id)
+    .is("deleted_at", null)
     .single();
 
   if (error) {
@@ -87,4 +89,18 @@ export async function getMeetingById(id: string) {
   }
 
   return data;
+}
+
+// 모임 삭제
+export async function deleteMeeting(meetingId: string) {
+  const { error } = await supabase
+    .from("meetings")
+    .update({
+      deleted_at: new Date().toISOString(),
+    })
+    .eq("id", meetingId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }

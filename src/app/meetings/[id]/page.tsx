@@ -4,16 +4,25 @@ import MeetingCalendar from "@/components/calendar/MeetingCalendar";
 import Badge from "@/components/common/Badge";
 import Button from "@/components/common/Button";
 import KakaoMap from "@/components/common/KakaoMap";
-import { getMeetingById } from "@/features/meetings/api/getMeetings";
+import {
+  deleteMeeting,
+  getMeetingById,
+} from "@/features/meetings/api/meetings";
 import {
   applyMeeting,
   getParticipant,
-} from "@/features/meetings/api/getParticipant";
+} from "@/features/meetings/api/participant";
 import { supabase } from "@/lib/supabase/client";
 import { User as UserType } from "@supabase/supabase-js";
-import { CalendarDays, MapPin, User } from "lucide-react";
+import {
+  CalendarDays,
+  EllipsisVertical,
+  MapPin,
+  Share2,
+  User,
+} from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface MeetingDetail {
   id: string;
@@ -66,6 +75,7 @@ const formatMeetingDate = (dateString: string) => {
 function MeetingDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const menuRef = useRef<HTMLDivElement>(null);
   const id = params.id;
 
   const [meeting, setMeeting] = useState<MeetingDetail | null>(null);
@@ -77,6 +87,13 @@ function MeetingDetailPage() {
   const [isApplying, setIsApplying] = useState(false);
 
   const [user, setUser] = useState<UserType | null>(null);
+
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const isHost = Boolean(user && user.id === meeting?.host?.id);
+  const isFull = meeting
+    ? meeting.current_participants >= meeting.capacity
+    : false;
 
   const hasDisabledStatus =
     participant?.status === "pending" || participant?.status === "approved";
@@ -164,11 +181,17 @@ function MeetingDetailPage() {
   };
 
   const isApplyDisabled =
+    isHost ||
     meeting?.status === "closed" ||
+    isFull ||
     isApplying ||
     Boolean(user && hasDisabledStatus);
 
   const getApplyButtonText = () => {
+    if (isHost) {
+      return "내가 개설한 모임이에요";
+    }
+
     if (meeting?.status === "closed") {
       return "모집이 완료된 모임이에요";
     }
@@ -197,6 +220,62 @@ function MeetingDetailPage() {
     }
   };
 
+  const handleShare = async () => {
+    const shareData = {
+      title: meeting?.title,
+      text: `${meeting?.title} 모임을 확인해보세요.`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+
+      await navigator.clipboard.writeText(window.location.href);
+      alert("모임 링크가 복사되었습니다.");
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+
+      console.error("공유 실패:", error);
+      alert("공유 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleEdit = () => {
+    setIsMenuOpen(false);
+    router.push(`/meetings/${meeting?.id}/edit`);
+  };
+
+  const handleDelete = async () => {
+    const confirmed = window.confirm(
+      "모임을 삭제하시겠어요?\n삭제한 모임은 다시 복구하기 어렵습니다.",
+    );
+
+    if (!confirmed || isDeleting) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      setIsMenuOpen(false);
+
+      await deleteMeeting(meeting?.id || "");
+
+      alert("모임이 삭제되었습니다.");
+      router.replace("/meetings");
+      router.refresh();
+    } catch (error) {
+      console.error("모임 삭제 실패:", error);
+      alert("모임 삭제 중 오류가 발생했습니다.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (isLoading) {
     return <div>불러오는 중...</div>;
   }
@@ -210,7 +289,58 @@ function MeetingDetailPage() {
   }
 
   return (
-    <div className="pt-6">
+    <div className="pt-8 relative">
+      <div className="absolute top-8 right-0" ref={menuRef}>
+        {isHost ? (
+          <>
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen((prev) => !prev)}
+              className="rounded-md p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+              aria-label="모임 관리 메뉴"
+              aria-expanded={isMenuOpen}
+              aria-haspopup="menu"
+            >
+              <EllipsisVertical className="h-5 w-5" />
+            </button>
+
+            {isMenuOpen && (
+              <div
+                role="menu"
+                className="absolute top-full right-0 z-20 mt-1 w-32 overflow-hidden rounded-md border border-gray-100 bg-white py-1 shadow-md"
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={handleEdit}
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50"
+                >
+                  수정하기
+                </button>
+
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isDeleting ? "삭제 중..." : "삭제하기"}
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <button
+            type="button"
+            onClick={handleShare}
+            className="rounded-md p-2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+            aria-label="모임 공유하기"
+          >
+            <Share2 className="h-5 w-5" />
+          </button>
+        )}
+      </div>
       <div className="flex gap-10">
         <img
           src={meeting.thumbnail_url || "/card_thumbnail.png"}
