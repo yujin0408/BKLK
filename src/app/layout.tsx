@@ -18,7 +18,9 @@ export default function RootLayout({
     <html lang="ko" className={`h-full antialiased ${pretendard.variable}`}>
       <body className="min-h-full flex flex-col font-pretendard">
         <Header />
-        <main className="pt-15 w-full max-w-350 mx-auto">{children}</main>
+        <main className="pt-15 w-full max-w-350 mx-auto flex-1">
+          {children}
+        </main>
         <Footer />
       </body>
     </html>

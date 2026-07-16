@@ -181,6 +181,7 @@ function MeetingDetailPage() {
   };
 
   const isApplyDisabled =
+    isParticipantLoading ||
     isHost ||
     meeting?.status === "closed" ||
     isFull ||
@@ -192,7 +193,7 @@ function MeetingDetailPage() {
       return "내가 개설한 모임이에요";
     }
 
-    if (meeting?.status === "closed") {
+    if (meeting?.status === "closed" || isFull) {
       return "모집이 완료된 모임이에요";
     }
 
