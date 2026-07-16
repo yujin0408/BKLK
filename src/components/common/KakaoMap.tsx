@@ -3,10 +3,32 @@
 import Script from "next/script";
 import { useCallback, useRef } from "react";
 
-declare global {
-  interface Window {
-    kakao: any;
-  }
+type KakaoLatLng = {
+  readonly __type: "KakaoLatLng";
+};
+
+interface KakaoMapInstance {
+  relayout: () => void;
+  setCenter: (position: KakaoLatLng) => void;
+}
+
+interface KakaoMaps {
+  load: (callback: () => void) => void;
+
+  LatLng: new (latitude: number, longitude: number) => KakaoLatLng;
+
+  Map: new (
+    container: HTMLElement,
+    options: {
+      center: KakaoLatLng;
+      level: number;
+    },
+  ) => KakaoMapInstance;
+
+  Marker: new (options: {
+    map: KakaoMapInstance;
+    position: KakaoLatLng;
+  }) => unknown;
 }
 
 interface Props {
@@ -19,7 +41,9 @@ export default function KakaoMap({ latitude, longitude }: Props) {
   const appKey = process.env.NEXT_PUBLIC_KAKAO_MAP_KEY;
 
   const initializeMap = useCallback(() => {
-    if (!window.kakao?.maps || !mapRef.current) return;
+    const kakaoMaps = window.kakao?.maps;
+
+    if (!kakaoMaps || !mapRef.current) return;
 
     const lat = Number(latitude);
     const lng = Number(longitude);
@@ -32,17 +56,17 @@ export default function KakaoMap({ latitude, longitude }: Props) {
       return;
     }
 
-    window.kakao.maps.load(() => {
+    kakaoMaps.load(() => {
       if (!mapRef.current) return;
 
-      const position = new window.kakao.maps.LatLng(lat, lng);
+      const position = new kakaoMaps.LatLng(lat, lng);
 
-      const map = new window.kakao.maps.Map(mapRef.current, {
+      const map = new kakaoMaps.Map(mapRef.current, {
         center: position,
         level: 3,
       });
 
-      new window.kakao.maps.Marker({
+      new kakaoMaps.Marker({
         map,
         position,
       });

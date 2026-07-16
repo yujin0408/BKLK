@@ -5,6 +5,7 @@ import MeetingCard from "@/components/common/MeetingCard";
 import { getMeetings } from "@/features/meetings/api/meetings";
 import { MeetingCardData } from "@/features/meetings/types";
 import { Plus } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function Home() {
@@ -30,10 +31,10 @@ export default function Home() {
         <p className="mt-2 text-gray-600">
           실시간으로 주목받는 인기 모임 리스트!
         </p>
-        <a href="/meetings" className="text-xs flex items-center gap-1">
+        <Link href="/meetings" className="text-xs flex items-center gap-1">
           <Plus className="size-3" />
           모임 더보기
-        </a>
+        </Link>
       </div>
       <div className="flex gap-6 mt-6">
         {meetings.map((meeting) => (
