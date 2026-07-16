@@ -5,8 +5,14 @@ import Badge from "@/components/common/Badge";
 import Button from "@/components/common/Button";
 import KakaoMap from "@/components/common/KakaoMap";
 import { getMeetingById } from "@/features/meetings/api/getMeetings";
+import {
+  applyMeeting,
+  getParticipant,
+} from "@/features/meetings/api/getParticipant";
+import { supabase } from "@/lib/supabase/client";
+import { User as UserType } from "@supabase/supabase-js";
 import { CalendarDays, MapPin, User } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface MeetingDetail {
@@ -41,6 +47,11 @@ interface MeetingDetail {
   } | null;
 }
 
+interface Participant {
+  id: string;
+  status: string;
+}
+
 const formatMeetingDate = (dateString: string) => {
   const date = new Date(dateString);
 
@@ -54,11 +65,21 @@ const formatMeetingDate = (dateString: string) => {
 
 function MeetingDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const id = params.id;
 
   const [meeting, setMeeting] = useState<MeetingDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const [participant, setParticipant] = useState<Participant | null>(null);
+  const [isParticipantLoading, setIsParticipantLoading] = useState(true);
+  const [isApplying, setIsApplying] = useState(false);
+
+  const [user, setUser] = useState<UserType | null>(null);
+
+  const hasDisabledStatus =
+    participant?.status === "pending" || participant?.status === "approved";
 
   useEffect(() => {
     if (!id) return;
@@ -83,6 +104,98 @@ function MeetingDetailPage() {
 
     fetchMeeting();
   }, [id]);
+
+  useEffect(() => {
+    const checkParticipant = async () => {
+      try {
+        setIsParticipantLoading(true);
+
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        setUser(user);
+
+        if (!user) {
+          setParticipant(null);
+          return;
+        }
+
+        const data = await getParticipant(id, user.id);
+
+        setParticipant(data);
+      } catch (error) {
+        console.error("참가 신청 여부 조회 실패:", error);
+      } finally {
+        setIsParticipantLoading(false);
+      }
+    };
+
+    if (id) {
+      checkParticipant();
+    }
+  }, [id]);
+
+  const handleApply = async () => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    if (
+      participant?.status === "pending" ||
+      participant?.status === "approved"
+    ) {
+      return;
+    }
+
+    try {
+      setIsApplying(true);
+
+      const data = await applyMeeting(id, user.id);
+
+      setParticipant(data);
+    } catch (error) {
+      console.error("모임 신청 실패:", error);
+      alert("모임 신청 중 오류가 발생했습니다.");
+    } finally {
+      setIsApplying(false);
+    }
+  };
+
+  const isApplyDisabled =
+    meeting?.status === "closed" ||
+    isApplying ||
+    Boolean(user && hasDisabledStatus);
+
+  const getApplyButtonText = () => {
+    if (meeting?.status === "closed") {
+      return "모집이 완료된 모임이에요";
+    }
+
+    if (isApplying) {
+      return "신청 중...";
+    }
+
+    if (!user) {
+      return "로그인 후 참가하기";
+    }
+
+    switch (participant?.status) {
+      case "pending":
+        return "참가 승인을 기다리고 있어요";
+
+      case "approved":
+        return "참가 중인 모임이에요";
+
+      case "rejected":
+        return "다시 신청하기";
+
+      case "cancelled":
+      default:
+        return "참가 신청하기";
+    }
+  };
 
   if (isLoading) {
     return <div>불러오는 중...</div>;
@@ -125,7 +238,13 @@ function MeetingDetailPage() {
             </span>
           </div>
           <div className="text-right mt-auto">
-            <Button variant="solid">참가 신청하기</Button>
+            <Button
+              variant="solid"
+              onClick={handleApply}
+              disabled={isApplyDisabled}
+            >
+              {getApplyButtonText()}
+            </Button>
           </div>
         </div>
       </div>
@@ -155,7 +274,13 @@ function MeetingDetailPage() {
           <MeetingCalendar meetingAt={meeting.meeting_at} />
         </div>
         <div className="mt-10 flex justify-center gap-3 max-w-lg m-auto">
-          <Button fullWidth>참가 신청하기</Button>
+          <Button
+            variant="solid"
+            onClick={handleApply}
+            disabled={isApplyDisabled}
+          >
+            {getApplyButtonText()}
+          </Button>
         </div>
       </div>
     </div>
