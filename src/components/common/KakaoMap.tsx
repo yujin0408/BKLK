@@ -133,7 +133,7 @@ export default function KakaoMap({ latitude, longitude }: Props) {
       <Script
         key={scriptKey}
         id={`kakao-map-sdk-${scriptKey}`}
-        src={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&autoload=false`}
+        src={`https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&autoload=false&retry=${scriptKey}`}
         strategy="afterInteractive"
         onReady={initializeMap}
         onError={(error) => {

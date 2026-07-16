@@ -65,7 +65,7 @@ function Header() {
   };
 
   return (
-    <header className="fixed w-full bg-gray-50  py-3 border-b-1 z-50">
+    <header className="fixed w-full bg-bg-blue py-3 border-b-1 z-50">
       <div className="flex items-center justify-between max-w-[1400px] mx-auto">
         <Link href="/" className="w-[120px]">
           <img src="/BKLK.png" alt="로고" />
