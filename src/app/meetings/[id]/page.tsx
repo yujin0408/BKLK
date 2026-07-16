@@ -251,14 +251,6 @@ function MeetingDetailPage() {
   };
 
   const handleDelete = async () => {
-    const {
-      data: { user: authUser },
-    } = await supabase.auth.getUser();
-
-    console.log({
-      authUserId: authUser?.id,
-      meetingHostUserId: meeting.host_user_id,
-    });
     if (!meeting) {
       return;
     }
