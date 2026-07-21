@@ -88,6 +88,7 @@ function MeetingDetailPage() {
   const [meeting, setMeeting] = useState<MeetingDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [participantError, setParticipantError] = useState(false);
 
   const [participant, setParticipant] = useState<Participant | null>(null);
   const [isParticipantLoading, setIsParticipantLoading] = useState(true);
@@ -133,6 +134,7 @@ function MeetingDetailPage() {
     const checkParticipant = async () => {
       try {
         setIsParticipantLoading(true);
+        setParticipantError(false);
 
         const {
           data: { user },
@@ -150,6 +152,7 @@ function MeetingDetailPage() {
         setParticipant(data);
       } catch (error) {
         console.error("참가 신청 여부 조회 실패:", error);
+        setParticipantError(true);
       } finally {
         setIsParticipantLoading(false);
       }
@@ -189,6 +192,7 @@ function MeetingDetailPage() {
 
   const isApplyDisabled =
     isParticipantLoading ||
+    participantError ||
     isHost ||
     meeting?.status === "closed" ||
     isFull ||

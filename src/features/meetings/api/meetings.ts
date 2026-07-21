@@ -93,15 +93,26 @@ export async function getMeetingById(id: string) {
 
 // 모임 삭제
 export async function deleteMeeting(meetingId: string, userId: string) {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("meetings")
     .update({
       deleted_at: new Date().toISOString(),
     })
     .eq("id", meetingId)
-    .eq("host_user_id", userId);
+    .eq("host_user_id", userId)
+    .is("deleted_at", null)
+    .select("id")
+    .maybeSingle();
 
   if (error) {
-    throw new Error(error.message);
+    throw error;
   }
+
+  if (!data) {
+    throw new Error(
+      "모임을 삭제할 수 없습니다. 이미 삭제되었거나 삭제 권한이 없습니다.",
+    );
+  }
+
+  return data.id;
 }
