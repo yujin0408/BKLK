@@ -5,7 +5,7 @@ import Dropdown from "@/components/common/Dropdown";
 import MeetingCard from "@/components/common/MeetingCard";
 import SearchInput from "@/components/common/SearchInput";
 import RegionFilter from "@/components/region/RegionFilter";
-import { getMeetings } from "@/features/meetings/api/getMeetings";
+import { getMeetings } from "@/features/meetings/api/meetings";
 import { MeetingCardData } from "@/features/meetings/types";
 import { useEffect, useState } from "react";
 
