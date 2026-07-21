@@ -61,16 +61,23 @@ interface Participant {
   status: string;
 }
 
-const formatMeetingDate = (dateString: string) => {
-  const date = new Date(dateString);
+function formatMeetingDate(dateString: string) {
+  const parts = new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date(dateString));
 
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const getPart = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "";
 
-  return `${month}.${day} ${hours}:${minutes}`;
-};
+  return `${getPart("month")}.${getPart("day")} ${getPart("hour")}:${getPart(
+    "minute",
+  )}`;
+}
 
 function MeetingDetailPage() {
   const params = useParams<{ id: string }>();
