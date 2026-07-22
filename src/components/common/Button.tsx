@@ -5,8 +5,8 @@ import { cn } from "@/utils/cn";
 const buttonVariants = cva(
   `
   inline-flex items-center justify-center gap-2
-  h-12 rounded-md px-6
-  text-lg font-semibold
+  rounded-md
+  font-semibold
   transition-colors
   cursor-pointer
   disabled:cursor-not-allowed
@@ -33,13 +33,22 @@ const buttonVariants = cva(
           disabled:bg-gray-100 disabled:text-white
         `,
       },
+
+      size: {
+        sm: "h-9 px-3 text-sm",
+        md: "h-10 px-4 text-base",
+        lg: "h-12 px-6 text-lg",
+      },
+
       fullWidth: {
         true: "w-full",
         false: "",
       },
     },
+
     defaultVariants: {
       variant: "solid",
+      size: "lg",
       fullWidth: false,
     },
   },
@@ -55,6 +64,7 @@ interface ButtonProps
 export default function Button({
   children,
   variant,
+  size,
   fullWidth,
   leftIcon,
   className,
@@ -63,7 +73,7 @@ export default function Button({
   return (
     <button
       {...props}
-      className={cn(buttonVariants({ variant, fullWidth }), className)}
+      className={cn(buttonVariants({ variant, size, fullWidth }), className)}
     >
       {leftIcon}
       {children}
