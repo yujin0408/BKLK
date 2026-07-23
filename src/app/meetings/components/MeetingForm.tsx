@@ -6,6 +6,8 @@ import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import Input from "@/components/common/Input";
 import DatePicker from "@/components/common/Datepicker";
 import Button from "@/components/common/Button";
+import FormSection from "@/components/layout/FormSection";
+import CharacterCount from "@/components/common/CharacterCount";
 
 interface MeetingFormValues {
   bookId: string;
@@ -16,6 +18,10 @@ interface MeetingFormValues {
   capacity: string;
   address: string;
   detailAddress: string;
+  region1DepthName: string;
+  region2DepthName: string;
+  longitude: number | null;
+  latitude: number | null;
 }
 
 const INITIAL_VALUES: MeetingFormValues = {
@@ -27,12 +33,25 @@ const INITIAL_VALUES: MeetingFormValues = {
   capacity: "",
   address: "",
   detailAddress: "",
+  region1DepthName: "",
+  region2DepthName: "",
+  longitude: null,
+  latitude: null,
 };
+
+interface SelectedBook {
+  isbn13: string;
+  title: string;
+  author: string;
+  publisher: string;
+  cover: string;
+}
 
 export default function MeetingForm() {
   const [values, setValues] = useState<MeetingFormValues>(INITIAL_VALUES);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [selectedBook, setSelectedBook] = useState<SelectedBook | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -307,42 +326,5 @@ export default function MeetingForm() {
         </button>
       </div>
     </form>
-  );
-}
-
-interface FormSectionProps {
-  label: string;
-  required?: boolean;
-  children: React.ReactNode;
-}
-
-function FormSection({ label, required = false, children }: FormSectionProps) {
-  return (
-    <section>
-      <label className="mb-3 block text-base font-semibold text-black-900">
-        {label}
-
-        {required && (
-          <span aria-label="필수 입력" className="ml-1 text-error">
-            *
-          </span>
-        )}
-      </label>
-
-      {children}
-    </section>
-  );
-}
-
-interface CharacterCountProps {
-  current: number;
-  max: number;
-}
-
-function CharacterCount({ current, max }: CharacterCountProps) {
-  return (
-    <p className="mt-2 text-right text-xs text-gray-400">
-      {current}/{max}
-    </p>
   );
 }
