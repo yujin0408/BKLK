@@ -1,330 +1,176 @@
 "use client";
 
-import { Camera, Search, X } from "lucide-react";
-import Image from "next/image";
-import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
-import Input from "@/components/common/Input";
-import DatePicker from "@/components/common/Datepicker";
-import Button from "@/components/common/Button";
-import FormSection from "@/components/layout/FormSection";
-import CharacterCount from "@/components/common/CharacterCount";
-
-interface MeetingFormValues {
-  bookId: string;
-  title: string;
-  description: string;
-  meetingDate: Date | undefined;
-  meetingTime: string;
-  capacity: string;
-  address: string;
-  detailAddress: string;
-  region1DepthName: string;
-  region2DepthName: string;
-  longitude: number | null;
-  latitude: number | null;
-}
-
-const INITIAL_VALUES: MeetingFormValues = {
-  bookId: "",
-  title: "",
-  description: "",
-  meetingDate: undefined,
-  meetingTime: "",
-  capacity: "",
-  address: "",
-  detailAddress: "",
-  region1DepthName: "",
-  region2DepthName: "",
-  longitude: null,
-  latitude: null,
-};
-
-interface SelectedBook {
-  isbn13: string;
-  title: string;
-  author: string;
-  publisher: string;
-  cover: string;
-}
+import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+// import AddressSearchModal from "@/features/locations/components/AddressSearchModal";
+// import BookSearchModal from "@/features/books/components/BookSearchModal";
+// import BookSelectField from "@/features/books/components/BookSelectField";
+// import useMeetingForm from "../hooks/useMeetingForm";
+import MeetingFormActions from "./MeetingFormActions";
+import MeetingInfoFields from "./MeetingInfoFields";
+import MeetingLocationFields from "./MeetingLocationFields";
+import MeetingScheduleFields from "./MeetingScheduleFields";
+import MeetingThumbnailField from "./MeetingThumbnailField";
+import useMeetingForm from "@/features/meetings/hooks/useMeetingForm";
+import BookSelectField from "./BookSelectFiled";
 
 export default function MeetingForm() {
-  const [values, setValues] = useState<MeetingFormValues>(INITIAL_VALUES);
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
-  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
-  const [selectedBook, setSelectedBook] = useState<SelectedBook | null>(null);
+  const router = useRouter();
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const {
+    values,
+    selectedBook,
+    thumbnailFile,
+    updateField,
+    setSelectedBook,
+    setThumbnailFile,
+    selectLocation,
+  } = useMeetingForm();
 
-  useEffect(() => {
-    return () => {
-      if (thumbnailPreview) {
-        URL.revokeObjectURL(thumbnailPreview);
-      }
-    };
-  }, [thumbnailPreview]);
+  const [isBookModalOpen, setIsBookModalOpen] = useState(false);
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const updateField = (
-    key: keyof MeetingFormValues,
-    value: string | Date | undefined,
-  ) => {
-    setValues((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
-  const handleThumbnailChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-
-    if (!file) return;
-
-    if (thumbnailPreview) {
-      URL.revokeObjectURL(thumbnailPreview);
-    }
-
-    setThumbnailFile(file);
-    setThumbnailPreview(URL.createObjectURL(file));
-  };
-
-  const handleThumbnailRemove = () => {
-    if (thumbnailPreview) {
-      URL.revokeObjectURL(thumbnailPreview);
-    }
-
-    setThumbnailFile(null);
-    setThumbnailPreview(null);
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    console.log({
-      ...values,
-      thumbnailFile,
-    });
+    if (isSubmitting) return;
+
+    setSubmitError(null);
+
+    if (!selectedBook) {
+      setSubmitError("함께 읽을 책을 선택해주세요.");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      console.log({
+        values,
+        selectedBook,
+        thumbnailFile,
+      });
+
+      /*
+       * 이후 아래 순서로 등록 로직을 구현하면 됩니다.
+       *
+       * 1. 폼 입력값 검증
+       * 2. 선택한 책을 books 테이블에 저장하고 bookId 반환
+       * 3. 대표 이미지가 있으면 Storage에 업로드
+       * 4. 날짜와 시간을 meeting_at으로 결합
+       * 5. meetings 테이블에 모임 등록
+       * 6. 생성된 모임 상세 페이지로 이동
+       *
+       * const bookId = await saveBook(selectedBook);
+       * const thumbnailUrl = thumbnailFile
+       *   ? await uploadMeetingThumbnail(thumbnailFile)
+       *   : null;
+       *
+       * const meeting = await createMeeting({
+       *   ...values,
+       *   bookId,
+       *   thumbnailUrl,
+       * });
+       *
+       * router.push(`/meetings/${meeting.id}`);
+       */
+    } catch (error) {
+      console.error("모임 등록에 실패했습니다.", error);
+
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "모임 등록 중 오류가 발생했습니다.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="mb-10 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-black-900">내 모임 만들기</h1>
+    <>
+      <form onSubmit={handleSubmit}>
+        <div className="mb-10 flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-black-900">내 모임 만들기</h1>
 
-        <button
-          type="submit"
-          className="
-            rounded-lg bg-black-900 px-6 py-3
-            text-sm font-semibold text-white
-            transition-colors hover:bg-black-700
-          "
-        >
-          등록하기
-        </button>
-      </div>
-
-      <div className="space-y-8">
-        <FormSection label="함께 읽을 책" required>
           <button
-            type="button"
+            type="submit"
+            disabled={isSubmitting}
             className="
-              flex min-h-28 w-full items-center justify-between
-              rounded-xl border border-line-100 bg-white px-5 py-4
-              text-left transition-colors hover:border-gray-300
+              rounded-lg bg-black-900 px-6 py-3
+              text-sm font-semibold text-white
+              transition-colors hover:bg-black-700
+              disabled:cursor-not-allowed disabled:opacity-50
             "
           >
-            <div>
-              <p className="font-medium text-black-900">
-                함께 읽을 책을 선택해주세요
-              </p>
-
-              <p className="mt-1 text-sm text-gray-400">
-                모임에서 함께 읽을 책을 검색해 선택할 수 있어요.
-              </p>
-            </div>
-
-            <Search
-              aria-hidden="true"
-              className="size-5 shrink-0 text-gray-400"
-            />
+            {isSubmitting ? "등록 중..." : "등록하기"}
           </button>
-        </FormSection>
-
-        <FormSection label="모임 제목" required>
-          <Input
-            value={values.title}
-            onChange={(value) => updateField("title", value)}
-            placeholder="모임 제목을 입력해주세요"
-            maxLength={50}
-          />
-
-          <CharacterCount current={values.title.length} max={50} />
-        </FormSection>
-
-        <FormSection label="모임 설명" required>
-          <textarea
-            value={values.description}
-            onChange={(e) => updateField("description", e.target.value)}
-            placeholder="어떤 모임인지 자세히 소개해주세요"
-            maxLength={1000}
-            className="
-              min-h-48 w-full resize-none rounded-xl border
-              border-line-100 px-4 py-3 text-base text-black-900
-              outline-none transition-colors
-              placeholder:text-gray-300
-              focus:border-active
-            "
-          />
-
-          <CharacterCount current={values.description.length} max={1000} />
-        </FormSection>
-
-        <div className="grid gap-6 md:grid-cols-3">
-          <FormSection label="모임 날짜" required>
-            <DatePicker
-              value={values.meetingDate}
-              onChange={(date) => updateField("meetingDate", date)}
-              inputClassName="w-full"
-              className="w-full"
-            />
-          </FormSection>
-
-          <FormSection label="모임 시간" required>
-            <Input
-              type="time"
-              value={values.meetingTime}
-              onChange={(value) => updateField("meetingTime", value)}
-              onClick={(event) => {
-                event.currentTarget.showPicker();
-              }}
-            />
-          </FormSection>
-
-          <FormSection label="모집 인원" required>
-            <div className="relative">
-              <Input
-                type="number"
-                min={2}
-                max={20}
-                value={values.capacity}
-                onChange={(value) => updateField("capacity", value)}
-                placeholder="2"
-              />
-
-              <span className="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-sm text-gray-500">
-                명
-              </span>
-            </div>
-          </FormSection>
         </div>
 
-        <FormSection label="모임 장소" required>
-          <div className="space-y-3">
-            <div className="flex gap-3 items-center">
-              <Input
-                value={values.address}
-                onChange={(value) => updateField("address", value)}
-                placeholder="주소를 검색해주세요"
-                readOnly
-              />
+        <div className="space-y-8">
+          <BookSelectField
+            book={selectedBook}
+            onClick={() => setIsBookModalOpen(true)}
+          />
 
-              <Button variant="outline" size="sm">
-                주소 검색
-              </Button>
-            </div>
+          <MeetingInfoFields
+            title={values.title}
+            description={values.description}
+            updateField={updateField}
+          />
 
-            <Input
-              value={values.detailAddress}
-              onChange={(value) => updateField("detailAddress", value)}
-              placeholder="상세 주소를 입력해주세요"
-            />
-          </div>
-        </FormSection>
+          <MeetingScheduleFields
+            values={{
+              meetingDate: values.meetingDate,
+              meetingTime: values.meetingTime,
+              capacity: values.capacity,
+            }}
+            updateField={updateField}
+          />
 
-        <FormSection label="대표 이미지">
-          <p className="mb-3 text-sm text-gray-400">
-            이미지를 등록하지 않으면 기본 이미지가 표시됩니다.
+          <MeetingLocationFields
+            address={values.address}
+            detailAddress={values.detailAddress}
+            onSearch={() => setIsAddressModalOpen(true)}
+            onDetailAddressChange={(value) =>
+              updateField("detailAddress", value)
+            }
+          />
+
+          <MeetingThumbnailField onChange={setThumbnailFile} />
+        </div>
+
+        {submitError && (
+          <p role="alert" className="mt-6 text-sm font-medium text-error">
+            {submitError}
           </p>
+        )}
 
-          <div className="flex flex-wrap gap-4">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="
-                flex size-32 flex-col items-center justify-center gap-2
-                rounded-xl border border-dashed border-gray-300
-                bg-gray-50 text-gray-500 transition-colors
-                hover:border-gray-500 hover:bg-gray-100
-              "
-            >
-              <Camera aria-hidden="true" className="size-6" />
+        <MeetingFormActions
+          isSubmitting={isSubmitting}
+          onCancel={() => router.back()}
+        />
+      </form>
 
-              <span className="text-sm font-medium">이미지 추가</span>
-            </button>
+      {/* <BookSearchModal
+        open={isBookModalOpen}
+        onOpenChange={setIsBookModalOpen}
+        onSelect={(book) => {
+          setSelectedBook(book);
+          setIsBookModalOpen(false);
+        }}
+      />
 
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              onChange={handleThumbnailChange}
-              className="hidden"
-            />
-
-            {thumbnailPreview && (
-              <div className="relative size-32 overflow-visible">
-                <div className="relative size-full overflow-hidden rounded-xl border border-line-100">
-                  <Image
-                    src={thumbnailPreview}
-                    alt="대표 이미지 미리보기"
-                    fill
-                    unoptimized
-                    className="object-cover"
-                  />
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleThumbnailRemove}
-                  aria-label="대표 이미지 삭제"
-                  className="
-                    absolute -top-2 -right-2 flex size-7
-                    items-center justify-center rounded-full
-                    border border-line-100 bg-white shadow-sm
-                  "
-                >
-                  <X aria-hidden="true" className="size-4 text-black-900" />
-                </button>
-              </div>
-            )}
-          </div>
-        </FormSection>
-      </div>
-
-      <div className="mt-12 flex justify-end gap-3 border-t border-line-100 pt-8">
-        <button
-          type="button"
-          className="
-            h-12 rounded-lg border border-line-100
-            px-6 text-sm font-semibold text-black-700
-            transition-colors hover:bg-gray-50
-          "
-        >
-          취소
-        </button>
-
-        <button
-          type="submit"
-          className="
-            h-12 rounded-lg bg-black-900 px-8
-            text-sm font-semibold text-white
-            transition-colors hover:bg-black-700
-          "
-        >
-          등록하기
-        </button>
-      </div>
-    </form>
+      <AddressSearchModal
+        open={isAddressModalOpen}
+        onOpenChange={setIsAddressModalOpen}
+        onSelect={(location) => {
+          selectLocation(location);
+          setIsAddressModalOpen(false);
+        }}
+      /> */}
+    </>
   );
 }

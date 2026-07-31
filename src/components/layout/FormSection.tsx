@@ -1,11 +1,13 @@
 interface FormSectionProps {
   label: string;
+  description?: string;
   required?: boolean;
   children: React.ReactNode;
 }
 
 export default function FormSection({
   label,
+  description,
   required = false,
   children,
 }: FormSectionProps) {
@@ -20,6 +22,10 @@ export default function FormSection({
           </span>
         )}
       </label>
+
+      {description && (
+        <p className="mb-3 text-sm text-gray-400">{description}</p>
+      )}
 
       {children}
     </section>

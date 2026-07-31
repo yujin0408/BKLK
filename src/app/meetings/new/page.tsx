@@ -1,5 +1,3 @@
-"use client";
-
 import MeetingForm from "../components/MeetingForm";
 
 function CreateMeetingPage() {
