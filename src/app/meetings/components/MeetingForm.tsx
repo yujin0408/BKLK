@@ -13,6 +13,7 @@ import MeetingScheduleFields from "./MeetingScheduleFields";
 import MeetingThumbnailField from "./MeetingThumbnailField";
 import useMeetingForm from "@/features/meetings/hooks/useMeetingForm";
 import BookSelectField from "./BookSelectFiled";
+import BookSearchModal from "@/features/books/components/BookSearchModal";
 
 export default function MeetingForm() {
   const router = useRouter();
@@ -24,11 +25,10 @@ export default function MeetingForm() {
     updateField,
     setSelectedBook,
     setThumbnailFile,
-    selectLocation,
   } = useMeetingForm();
 
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
-  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [, setIsAddressModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -154,7 +154,7 @@ export default function MeetingForm() {
         />
       </form>
 
-      {/* <BookSearchModal
+      <BookSearchModal
         open={isBookModalOpen}
         onOpenChange={setIsBookModalOpen}
         onSelect={(book) => {
@@ -162,15 +162,6 @@ export default function MeetingForm() {
           setIsBookModalOpen(false);
         }}
       />
-
-      <AddressSearchModal
-        open={isAddressModalOpen}
-        onOpenChange={setIsAddressModalOpen}
-        onSelect={(location) => {
-          selectLocation(location);
-          setIsAddressModalOpen(false);
-        }}
-      /> */}
     </>
   );
 }
