@@ -9,6 +9,7 @@ import { useBookSearch } from "@/features/books/hooks/useBookSearch";
 import { useSaveBook } from "@/features/books/hooks/useSaveBook";
 import { BookSearchResult } from "@/features/books/types";
 import { toCreateBookInput } from "@/features/books/utils/mapAladinBook";
+import { X } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -68,9 +69,13 @@ export default function BookSearchModal({
       <div className="relative z-10 w-full max-w-2xl rounded-lg bg-white p-6">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold">책 검색</h3>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            닫기
-          </Button>
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="text-gray-400 hover:text-gray-500"
+          >
+            <X size={24} />
+          </button>
         </div>
 
         <BookSearchInput
