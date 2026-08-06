@@ -18,12 +18,21 @@ const BOOK_CATEGORY_SOURCES = ["aladin", "manual", "unclassified"] as const;
 type BookCategorySource = (typeof BOOK_CATEGORY_SOURCES)[number];
 
 export async function POST(request: NextRequest) {
-  try {
-    const body: unknown = await request.json();
+  let body: unknown;
 
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { message: "잘못된 요청입니다." },
+      { status: 400 },
+    );
+  }
+
+  try {
     if (!isCreateBookRequest(body)) {
       return NextResponse.json(
-        { message: "잘못된 도서 정보입니다." },
+        { message: "잘못된 요청입니다." },
         { status: 400 },
       );
     }

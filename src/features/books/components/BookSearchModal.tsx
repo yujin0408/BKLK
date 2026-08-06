@@ -42,6 +42,7 @@ export default function BookSearchModal({
   const titleId = useId();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const previousFocusedElementRef = useRef<HTMLElement | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) {
@@ -62,6 +63,53 @@ export default function BookSearchModal({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onOpenChange(false);
+        return;
+      }
+
+      if (event.key !== "Tab") return;
+
+      const dialog = dialogRef.current;
+
+      if (!dialog) return;
+
+      const focusableElements = Array.from(
+        dialog.querySelectorAll<HTMLElement>(
+          [
+            "a[href]",
+            "button:not([disabled])",
+            "input:not([disabled])",
+            "select:not([disabled])",
+            "textarea:not([disabled])",
+            '[tabindex]:not([tabindex="-1"])',
+          ].join(","),
+        ),
+      ).filter(
+        (element) =>
+          !element.hasAttribute("aria-hidden") &&
+          element.getClientRects().length > 0,
+      );
+
+      if (focusableElements.length === 0) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
+      const activeElement = document.activeElement;
+
+      if (event.shiftKey) {
+        if (activeElement === firstElement || !dialog.contains(activeElement)) {
+          event.preventDefault();
+          lastElement.focus();
+        }
+      } else if (
+        activeElement === lastElement ||
+        !dialog.contains(activeElement)
+      ) {
+        event.preventDefault();
+        firstElement.focus();
       }
     };
 
@@ -108,9 +156,11 @@ export default function BookSearchModal({
       />
 
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        tabIndex={-1}
         className="relative z-10 w-full max-w-2xl rounded-lg bg-white p-6"
       >
         <div className="mb-4 flex items-center justify-between">
