@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useId, useRef } from "react";
 import BookSearchInput from "./BookSearchInput";
 import BookSearchResultList from "./BookSearchResultList";
 import { useBestsellers } from "@/features/books/hooks/useBestsellers";
@@ -27,19 +27,55 @@ export default function BookSearchModal({
   onSelect,
 }: Props) {
   const bestsellers = useBestsellers();
-  const search = useBookSearch();
+  const {
+    keyword,
+    setKeyword,
+    submit,
+    reset,
+    submittedKeyword,
+    data,
+    isFetching,
+    isError,
+  } = useBookSearch();
   const saveMutation = useSaveBook();
 
-  useEffect(() => {
-    // 모달 열릴 때 검색 상태 초기화 (UX 판단: 모달 닫힐 때 초기화)
-    if (!open) {
-      search.reset();
-    }
-  }, [open]);
+  const titleId = useId();
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const previousFocusedElementRef = useRef<HTMLElement | null>(null);
 
-  const isSearching = !!search.submittedKeyword;
-  const items = isSearching ? (search.data ?? []) : (bestsellers.data ?? []);
-  const loading = isSearching ? search.isFetching : bestsellers.isFetching;
+  useEffect(() => {
+    if (!open) {
+      reset();
+    }
+  }, [open, reset]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    previousFocusedElementRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+
+    closeButtonRef.current?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onOpenChange(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      previousFocusedElementRef.current?.focus();
+    };
+  }, [open, onOpenChange]);
+
+  const isSearching = !!submittedKeyword;
+  const items = isSearching ? (data ?? []) : (bestsellers.data ?? []);
+  const loading = isSearching ? isFetching : bestsellers.isFetching;
 
   const handleSelect = async (book: BookSearchResult) => {
     if (saveMutation.isLoading) return;
@@ -48,11 +84,16 @@ export default function BookSearchModal({
 
     try {
       const saved = await saveMutation.mutateAsync(input);
+
       onSelect(saved);
       onOpenChange(false);
-    } catch (e) {
-      console.error(e);
-      alert((e as Error).message || "도서 저장 중 오류가 발생했습니다.");
+    } catch (error) {
+      console.error(error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "도서 저장 중 오류가 발생했습니다.",
+      );
     }
   };
 
@@ -63,28 +104,41 @@ export default function BookSearchModal({
       <div
         className="absolute inset-0 bg-black/40"
         onClick={() => onOpenChange(false)}
+        aria-hidden="true"
       />
 
-      <div className="relative z-10 w-full max-w-2xl rounded-lg bg-white p-6">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="relative z-10 w-full max-w-2xl rounded-lg bg-white p-6"
+      >
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold">책 검색</h3>
+          <h2 id={titleId} className="text-lg font-semibold">
+            책 검색
+          </h2>
+
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={() => onOpenChange(false)}
+            aria-label="책 검색 모달 닫기"
             className="text-gray-400 hover:text-gray-500"
           >
-            <X size={24} />
+            <X size={24} aria-hidden="true" />
           </button>
         </div>
 
         <BookSearchInput
-          value={search.keyword}
-          onChange={search.setKeyword}
-          onSubmit={() => search.submit()}
+          value={keyword}
+          onChange={setKeyword}
+          onSubmit={submit}
         />
 
-        {search.isError && (
-          <p className="text-sm text-error">검색 중 오류가 발생했습니다.</p>
+        {isError && (
+          <p role="alert" className="text-sm text-error">
+            검색 중 오류가 발생했습니다.
+          </p>
         )}
 
         <div className="max-h-[60vh] overflow-auto">
@@ -93,6 +147,7 @@ export default function BookSearchModal({
             onSelect={handleSelect}
             loading={loading}
             isSearching={isSearching}
+            disabled={saveMutation.isLoading}
           />
         </div>
       </div>

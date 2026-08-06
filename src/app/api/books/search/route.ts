@@ -113,12 +113,16 @@ export async function GET(request: NextRequest) {
       ? parsedData.item.filter(isAladinBookItem)
       : [];
 
+    const books = items
+      .map(mapAladinBookItem)
+      .filter((book) => book.aladinItemId > 0);
+
     return NextResponse.json({
-      books: items.map(mapAladinBookItem),
+      books,
       totalResults:
         typeof parsedData.totalResults === "number"
           ? parsedData.totalResults
-          : items.length,
+          : books.length,
     });
   } catch (error) {
     console.error("Aladin search handler error", error);

@@ -8,6 +8,7 @@ interface Props {
   onSelect: (book: BookSearchResult) => void;
   loading?: boolean;
   isSearching?: boolean;
+  disabled?: boolean;
 }
 
 export default function BookSearchResultList({
@@ -15,6 +16,7 @@ export default function BookSearchResultList({
   onSelect,
   loading = false,
   isSearching = false,
+  disabled = false,
 }: Props) {
   if (loading) {
     return <p className="p-6 text-center text-sm text-gray-500">검색 중...</p>;
@@ -37,6 +39,7 @@ export default function BookSearchResultList({
           key={book.aladinItemId}
           book={book}
           onSelect={onSelect}
+          disabled={disabled}
         />
       ))}
     </ul>
