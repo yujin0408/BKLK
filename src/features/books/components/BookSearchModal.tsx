@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import Button from "@/components/common/Button";
 import BookSearchInput from "./BookSearchInput";
 import BookSearchResultList from "./BookSearchResultList";
 import { useBestsellers } from "@/features/books/hooks/useBestsellers";

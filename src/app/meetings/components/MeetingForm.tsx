@@ -90,19 +90,6 @@ export default function MeetingForm() {
       <form onSubmit={handleSubmit}>
         <div className="mb-10 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-black-900">내 모임 만들기</h1>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="
-              rounded-lg bg-black-900 px-6 py-3
-              text-sm font-semibold text-white
-              transition-colors hover:bg-black-700
-              disabled:cursor-not-allowed disabled:opacity-50
-            "
-          >
-            {isSubmitting ? "등록 중..." : "등록하기"}
-          </button>
         </div>
 
         <div className="space-y-8">

@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
-import type { AladinBookResponse } from "@/features/books/types";
+import type { AladinBookItem } from "@/features/books/types";
 import { mapAladinBookItem } from "@/features/books/utils/mapAladinBook";
 
 const ALADIN_BESTSELLER_URL = "https://www.aladin.co.kr/ttb/api/ItemList.aspx";
+
+interface AladinBestsellerResponse {
+  totalResults?: number;
+  startIndex?: number;
+  itemsPerPage?: number;
+  item?: unknown;
+  errorCode?: number | string;
+  errorMessage?: string;
+}
 
 export async function GET() {
   const ttbKey = process.env.ALADIN_TTB_KEY;
@@ -49,10 +58,10 @@ export async function GET() {
       );
     }
 
-    let parsed: AladinBookResponse;
+    let parsedData: unknown;
 
     try {
-      parsed = JSON.parse(responseText) as AladinBookResponse;
+      parsedData = JSON.parse(responseText);
     } catch (error) {
       console.error("Aladin bestseller JSON parse error", {
         error,
@@ -66,18 +75,41 @@ export async function GET() {
       );
     }
 
-    const books = Array.isArray(parsed.item)
-      ? parsed.item
-          .map(mapAladinBookItem)
-          .filter((book) => book.aladinItemId > 0)
+    if (!isAladinBestsellerResponse(parsedData)) {
+      console.error("Invalid Aladin bestseller response", parsedData);
+
+      return NextResponse.json(
+        { message: "올바르지 않은 베스트셀러 응답입니다." },
+        { status: 502 },
+      );
+    }
+
+    if (parsedData.errorCode || parsedData.errorMessage) {
+      console.error("Aladin bestseller API error", {
+        errorCode: parsedData.errorCode,
+        errorMessage: parsedData.errorMessage,
+      });
+
+      return NextResponse.json(
+        { message: "베스트셀러 조회에 실패했습니다." },
+        { status: 502 },
+      );
+    }
+
+    const items = Array.isArray(parsedData.item)
+      ? parsedData.item.filter(isAladinBookItem)
       : [];
+
+    const books = items
+      .map(mapAladinBookItem)
+      .filter((book) => book.aladinItemId > 0);
 
     return NextResponse.json(
       {
         books,
         totalResults:
-          typeof parsed.totalResults === "number"
-            ? parsed.totalResults
+          typeof parsedData.totalResults === "number"
+            ? parsedData.totalResults
             : books.length,
       },
       {
@@ -95,4 +127,25 @@ export async function GET() {
       { status: 502 },
     );
   }
+}
+
+function isAladinBestsellerResponse(
+  value: unknown,
+): value is AladinBestsellerResponse {
+  return typeof value === "object" && value !== null;
+}
+
+function isAladinBookItem(value: unknown): value is AladinBookItem {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+
+  return (
+    "itemId" in value &&
+    (typeof value.itemId === "number" || typeof value.itemId === "string") &&
+    "title" in value &&
+    typeof value.title === "string" &&
+    "author" in value &&
+    typeof value.author === "string"
+  );
 }
