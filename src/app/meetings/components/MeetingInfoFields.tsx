@@ -6,15 +6,17 @@ import { MeetingFormValues } from "@/features/meetings/types";
 interface Props {
   title: string;
   description: string;
-  updateField: <K extends keyof MeetingFormValues>(
-    key: K,
-    value: MeetingFormValues[K],
-  ) => void;
+  errors?: {
+    title?: string;
+    description?: string;
+  };
+  updateField: (field: "title" | "description", value: string) => void;
 }
 
 export default function MeetingInfoFields({
   title,
   description,
+  errors,
   updateField,
 }: Props) {
   return (
@@ -26,6 +28,11 @@ export default function MeetingInfoFields({
           placeholder="모임 제목을 입력해주세요"
           maxLength={50}
         />
+        {errors?.title && (
+          <p role="alert" className="mt-1 text-sm text-error">
+            {errors.title}
+          </p>
+        )}
 
         <CharacterCount current={title.length} max={50} />
       </FormSection>
@@ -43,6 +50,11 @@ export default function MeetingInfoFields({
             focus:border-active
           "
         />
+        {errors?.description && (
+          <p role="alert" className="mt-1 text-sm text-error">
+            {errors.description}
+          </p>
+        )}
 
         <CharacterCount current={description.length} max={1000} />
       </FormSection>
