@@ -15,6 +15,8 @@ import validateMeetingForm, {
   MeetingFormErrors,
   MeetingFormField,
 } from "@/features/meetings/utils/validateMeetingForm";
+import toMeetingAtIso from "@/features/meetings/utils/toMeetingAtIso";
+import createMeeting from "@/features/meetings/api/createMeeting";
 
 const MEETING_FORM_FIELDS = [
   "book",
@@ -85,33 +87,33 @@ export default function MeetingForm() {
 
     setFieldErrors({});
 
-    if (!selectedBook) {
+    /*
+     * validateMeetingForm을 통과했으므로 실제로 값이 존재하지만,
+     * TypeScript는 외부 함수의 검증 결과까지 추론하지 못합니다.
+     */
+    if (
+      !selectedBook ||
+      !values.meetingDate ||
+      values.longitude === null ||
+      values.latitude === null
+    ) {
+      setSubmitError("입력 내용을 다시 확인해주세요.");
       return;
     }
 
     try {
       setIsSubmitting(true);
 
-      console.log({
-        values: {
-          ...values,
-          title: values.title.trim(),
-          description: values.description.trim(),
-          detailAddress: values.detailAddress.trim(),
-          capacity: Number(values.capacity),
-        },
-        selectedBook,
+      const meetingAt = toMeetingAtIso(values.meetingDate, values.meetingTime);
+
+      const meeting = await createMeeting({
+        values,
+        bookId: selectedBook.id,
+        meetingAt,
         thumbnailFile,
       });
 
-      /*
-       * 다음 단계
-       *
-       * 1. thumbnailFile Storage 업로드
-       * 2. meetingDate + meetingTime 결합
-       * 3. meetings 테이블 insert
-       * 4. 상세 페이지 이동
-       */
+      router.replace(`/meetings/${meeting.id}`);
     } catch (error) {
       console.error("모임 등록에 실패했습니다.", error);
 
