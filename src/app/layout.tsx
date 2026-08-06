@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Providers from "@/app/providers";
 import Header from "@/components/layout/Header";
 import { pretendard } from "@/fonts";
 import Footer from "@/components/layout/Footer";
@@ -19,7 +20,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-pretendard">
         <Header />
         <main className="pt-15 w-full max-w-350 mx-auto flex-1">
-          {children}
+          <Providers>{children}</Providers>
         </main>
         <Footer />
       </body>
