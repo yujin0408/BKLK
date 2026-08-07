@@ -13,6 +13,7 @@ interface DatePickerProps {
   onChange: (date: Date | undefined) => void;
   inputClassName?: string;
   className?: string;
+  id?: string;
 }
 
 function DatePicker({
@@ -20,6 +21,7 @@ function DatePicker({
   onChange,
   inputClassName,
   className,
+  id,
 }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const datePickerRef = useRef<HTMLDivElement>(null);
@@ -58,6 +60,7 @@ function DatePicker({
     <div ref={datePickerRef} className={cn("relative inline-block", className)}>
       <div className="relative">
         <Input
+          id={id}
           value={inputValue}
           readOnly
           onClick={() => setIsOpen(true)}
