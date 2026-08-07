@@ -1,4 +1,13 @@
+import {
+  MAX_CAPACITY,
+  MAX_DESCRIPTION_LENGTH,
+  MAX_TITLE_LENGTH,
+  MIN_CAPACITY,
+  MIN_DESCRIPTION_LENGTH,
+  MIN_TITLE_LENGTH,
+} from "@/constants/meetings";
 import { MeetingFormValues } from "@/features/meetings/types";
+import toMeetingAtIso from "@/features/meetings/utils/toMeetingAtIso";
 
 interface SelectedBook {
   id: string;
@@ -26,40 +35,9 @@ interface ValidateMeetingFormParams {
   thumbnailFile: File | null;
 }
 
-const MIN_TITLE_LENGTH = 2;
-const MAX_TITLE_LENGTH = 50;
-const MIN_DESCRIPTION_LENGTH = 10;
-const MAX_DESCRIPTION_LENGTH = 500;
-const MIN_CAPACITY = 2;
-const MAX_CAPACITY = 100;
 const MAX_THUMBNAIL_SIZE = 5 * 1024 * 1024;
 
 const ALLOWED_THUMBNAIL_TYPES = ["image/jpeg", "image/png", "image/webp"];
-
-function combineMeetingDateTime(
-  meetingDate: Date,
-  meetingTime: string,
-): Date | null {
-  const [hourString, minuteString] = meetingTime.split(":");
-  const hour = Number(hourString);
-  const minute = Number(minuteString);
-
-  if (
-    !Number.isInteger(hour) ||
-    !Number.isInteger(minute) ||
-    hour < 0 ||
-    hour > 23 ||
-    minute < 0 ||
-    minute > 59
-  ) {
-    return null;
-  }
-
-  const result = new Date(meetingDate);
-  result.setHours(hour, minute, 0, 0);
-
-  return result;
-}
 
 export default function validateMeetingForm({
   values,
@@ -101,15 +79,19 @@ export default function validateMeetingForm({
   }
 
   if (values.meetingDate && values.meetingTime) {
-    const meetingDateTime = combineMeetingDateTime(
-      values.meetingDate,
-      values.meetingTime,
-    );
+    try {
+      const meetingAtIso = toMeetingAtIso(
+        values.meetingDate,
+        values.meetingTime,
+      );
 
-    if (!meetingDateTime) {
+      const meetingAtTimestamp = new Date(meetingAtIso).getTime();
+
+      if (meetingAtTimestamp <= Date.now()) {
+        errors.meetingDate = "모임 날짜와 시간은 현재 이후여야 합니다.";
+      }
+    } catch {
       errors.meetingTime = "모임 시간이 올바르지 않습니다.";
-    } else if (meetingDateTime.getTime() <= Date.now()) {
-      errors.meetingDate = "모임 날짜와 시간은 현재 이후여야 합니다.";
     }
   }
 

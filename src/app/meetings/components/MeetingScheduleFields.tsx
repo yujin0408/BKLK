@@ -1,6 +1,7 @@
 import DatePicker from "@/components/common/Datepicker";
 import Input from "@/components/common/Input";
 import FormSection from "@/components/layout/FormSection";
+import { MAX_CAPACITY, MIN_CAPACITY } from "@/constants/meetings";
 import { MeetingFormValues } from "@/features/meetings/types";
 
 interface MeetingScheduleErrors {
@@ -56,8 +57,8 @@ export default function MeetingScheduleFields({
         <div className="relative">
           <Input
             type="number"
-            min={2}
-            max={20}
+            min={MIN_CAPACITY}
+            max={MAX_CAPACITY}
             value={values.capacity}
             onChange={(value) => updateField("capacity", value)}
             placeholder="2"

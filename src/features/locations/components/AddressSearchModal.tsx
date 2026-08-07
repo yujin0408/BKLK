@@ -3,13 +3,13 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { X } from "lucide-react";
 import AddressSearchInput from "./AddressSearchInput";
+import AddressSearchResultList from "./AddressSearchResultList";
 import getLocationRegion from "@/features/locations/api/getLocationRegion";
 import useLocationSearch from "@/features/locations/hooks/useLocationSearch";
 import {
   LocationSearchResult,
   SelectedLocation,
 } from "@/features/locations/types";
-import AddressSearchResultList from "./AddressSearchResultList";
 
 interface Props {
   open: boolean;
@@ -50,9 +50,13 @@ function AddressSearchDialog({
   } = useLocationSearch();
 
   const titleId = useId();
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const previousFocusedElementRef = useRef<HTMLElement | null>(null);
-  const dialogRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+
+  const selectingLocationIdRef = useRef<string | null>(null);
+  const onOpenChangeRef = useRef(onOpenChange);
 
   const [selectingLocationId, setSelectingLocationId] = useState<string | null>(
     null,
@@ -60,6 +64,10 @@ function AddressSearchDialog({
   const [selectError, setSelectError] = useState<string | null>(null);
 
   const isSelecting = selectingLocationId !== null;
+
+  useEffect(() => {
+    onOpenChangeRef.current = onOpenChange;
+  }, [onOpenChange]);
 
   useEffect(() => {
     previousFocusedElementRef.current =
@@ -71,9 +79,9 @@ function AddressSearchDialog({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        if (isSelecting) return;
+        if (selectingLocationIdRef.current !== null) return;
 
-        onOpenChange(false);
+        onOpenChangeRef.current(false);
         return;
       }
 
@@ -131,20 +139,21 @@ function AddressSearchDialog({
       document.removeEventListener("keydown", handleKeyDown);
       previousFocusedElementRef.current?.focus();
     };
-  }, [isSelecting, onOpenChange]);
+  }, []);
 
   const isSearching = Boolean(submittedKeyword);
   const items = data ?? [];
 
   const handleClose = () => {
-    if (isSelecting) return;
+    if (selectingLocationIdRef.current !== null) return;
 
     onOpenChange(false);
   };
 
   const handleSelect = async (location: LocationSearchResult) => {
-    if (isSelecting) return;
+    if (selectingLocationIdRef.current !== null) return;
 
+    selectingLocationIdRef.current = location.id;
     setSelectingLocationId(location.id);
     setSelectError(null);
 
@@ -173,6 +182,7 @@ function AddressSearchDialog({
           : "장소 선택 중 오류가 발생했습니다.",
       );
     } finally {
+      selectingLocationIdRef.current = null;
       setSelectingLocationId(null);
     }
   };
@@ -181,13 +191,14 @@ function AddressSearchDialog({
     error instanceof Error ? error.message : "검색 중 오류가 발생했습니다.";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      <div
-        className="absolute inset-0 bg-black/40"
-        onClick={handleClose}
-        aria-hidden="true"
-      />
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onMouseDown={(event) => {
+        if (event.target !== event.currentTarget) return;
 
+        handleClose();
+      }}
+    >
       <div
         ref={dialogRef}
         role="dialog"

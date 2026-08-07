@@ -88,7 +88,7 @@ export default function AddressSearchResultList({
                   location.address &&
                   location.roadAddress !== location.address && (
                     <p className="mt-1 text-xs text-gray-500">
-                      지번 {location.address}
+                      {location.address}
                     </p>
                   )}
 

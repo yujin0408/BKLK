@@ -1,5 +1,13 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import {
+  MAX_CAPACITY,
+  MAX_DESCRIPTION_LENGTH,
+  MAX_TITLE_LENGTH,
+  MIN_CAPACITY,
+  MIN_DESCRIPTION_LENGTH,
+  MIN_TITLE_LENGTH,
+} from "@/constants/meetings";
 
 const THUMBNAIL_BUCKET = "meeting-thumbnails";
 const MAX_THUMBNAIL_SIZE = 5 * 1024 * 1024;
@@ -99,10 +107,10 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!title) {
+    if (title.length < MIN_TITLE_LENGTH || title.length > MAX_TITLE_LENGTH) {
       return NextResponse.json(
         {
-          message: "모임 제목을 입력해주세요.",
+          message: `모임 제목은 ${MIN_TITLE_LENGTH}자 이상 ${MAX_TITLE_LENGTH}자 이하로 입력해주세요.`,
         },
         {
           status: 400,
@@ -110,10 +118,13 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!description) {
+    if (
+      description.length < MIN_DESCRIPTION_LENGTH ||
+      description.length > MAX_DESCRIPTION_LENGTH
+    ) {
       return NextResponse.json(
         {
-          message: "모임 소개를 입력해주세요.",
+          message: `모임 소개는 ${MIN_DESCRIPTION_LENGTH}자 이상 ${MAX_DESCRIPTION_LENGTH}자 이하로 입력해주세요.`,
         },
         {
           status: 400,
@@ -140,10 +151,14 @@ export async function POST(request: Request) {
 
     const capacity = Number(capacityValue);
 
-    if (!Number.isInteger(capacity) || capacity < 2 || capacity > 100) {
+    if (
+      !Number.isInteger(capacity) ||
+      capacity < MIN_CAPACITY ||
+      capacity > MAX_CAPACITY
+    ) {
       return NextResponse.json(
         {
-          message: "모집 인원은 2명 이상 100명 이하로 입력해주세요.",
+          message: `모집 인원은 ${MIN_CAPACITY}명 이상 ${MAX_CAPACITY}명 이하로 입력해주세요.`,
         },
         {
           status: 400,
@@ -162,10 +177,28 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!longitudeValue || !latitudeValue) {
+      return NextResponse.json(
+        {
+          message: "장소 좌표가 필요합니다.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
     const longitude = Number(longitudeValue);
     const latitude = Number(latitudeValue);
 
-    if (!Number.isFinite(longitude) || !Number.isFinite(latitude)) {
+    if (
+      !Number.isFinite(longitude) ||
+      !Number.isFinite(latitude) ||
+      longitude < -180 ||
+      longitude > 180 ||
+      latitude < -90 ||
+      latitude > 90
+    ) {
       return NextResponse.json(
         {
           message: "장소 좌표가 올바르지 않습니다.",
@@ -263,7 +296,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json(
           {
-            message: uploadError.message,
+            message: "대표 이미지 업로드에 실패했습니다.",
           },
           {
             status: 500,

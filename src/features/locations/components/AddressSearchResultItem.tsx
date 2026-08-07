@@ -42,12 +42,9 @@ export default function AddressSearchResultItem({
             {location.displayAddress}
           </p>
 
-          {location.roadAddress &&
-            location.roadAddress !== location.address && (
-              <p className="mt-1 text-xs text-gray-500">
-                지번 {location.address}
-              </p>
-            )}
+          {Boolean(location.roadAddress && location.address) && (
+            <p className="mt-1 text-xs text-gray-500">{location.address}</p>
+          )}
 
           {location.categoryName && (
             <p className="mt-2 truncate text-xs text-gray-400">
