@@ -1,6 +1,5 @@
 "use client";
 
-import Button from "@/components/common/Button";
 import DatePicker from "@/components/common/Datepicker";
 import Dropdown from "@/components/common/Dropdown";
 import MeetingCard from "@/components/common/MeetingCard";
@@ -118,9 +117,12 @@ export default function Meetings() {
           </p>
         </div>
 
-        <Button size="sm" variant="outline">
-          <Link href="/meetings/new">모임 만들기</Link>
-        </Button>
+        <Link
+          href="/meetings/new"
+          className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-primary/90 bg-brand-primary"
+        >
+          모임 만들기
+        </Link>
       </div>
 
       <section className="mt-8">
