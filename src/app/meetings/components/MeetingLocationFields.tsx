@@ -21,10 +21,15 @@ export default function MeetingLocationFields({
   onSearch,
 }: Props) {
   return (
-    <FormSection label="모임 장소" required>
+    <FormSection label="모임 장소" htmlFor="meeting-location" required>
       <div className="space-y-3">
         <div className="flex items-center gap-3">
-          <Input value={address} placeholder="주소를 검색해주세요" readOnly />
+          <Input
+            id="meeting-location"
+            value={address}
+            placeholder="주소를 검색해주세요"
+            readOnly
+          />
 
           <Button type="button" variant="outline" size="sm" onClick={onSearch}>
             주소 검색

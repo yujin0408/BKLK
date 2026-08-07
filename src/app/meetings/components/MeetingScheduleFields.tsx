@@ -25,8 +25,9 @@ export default function MeetingScheduleFields({
 }: Props) {
   return (
     <div className="grid gap-6 md:grid-cols-3">
-      <FormSection label="모임 날짜" required>
+      <FormSection label="모임 날짜" htmlFor="meeting-date" required>
         <DatePicker
+          id="meeting-date"
           value={values.meetingDate}
           onChange={(date) => updateField("meetingDate", date)}
           inputClassName="w-full"
@@ -39,8 +40,9 @@ export default function MeetingScheduleFields({
         )}
       </FormSection>
 
-      <FormSection label="모임 시간" required>
+      <FormSection label="모임 시간" htmlFor="meeting-time" required>
         <Input
+          id="meeting-time"
           type="time"
           value={values.meetingTime}
           onChange={(value) => updateField("meetingTime", value)}
@@ -53,9 +55,10 @@ export default function MeetingScheduleFields({
         )}
       </FormSection>
 
-      <FormSection label="모집 인원" required>
+      <FormSection label="모집 인원" htmlFor="meeting-capacity" required>
         <div className="relative">
           <Input
+            id="meeting-capacity"
             type="number"
             min={MIN_CAPACITY}
             max={MAX_CAPACITY}

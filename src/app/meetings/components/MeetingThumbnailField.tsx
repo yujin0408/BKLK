@@ -46,13 +46,14 @@ export default function MeetingThumbnailField({
   };
 
   return (
-    <FormSection label="대표 이미지">
+    <FormSection label="대표 이미지" htmlFor="meeting-thumbnail">
       <p className="mb-3 text-sm text-gray-400">
         이미지를 등록하지 않으면 기본 이미지가 표시됩니다.
       </p>
 
       <div className="flex flex-wrap gap-4">
         <button
+          id="meeting-thumbnail"
           type="button"
           onClick={() => fileInputRef.current?.click()}
           className="

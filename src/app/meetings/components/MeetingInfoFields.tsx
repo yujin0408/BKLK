@@ -21,8 +21,9 @@ export default function MeetingInfoFields({
 }: Props) {
   return (
     <>
-      <FormSection label="모임 제목" required>
+      <FormSection label="모임 제목" htmlFor="meeting-title" required>
         <Input
+          id="meeting-title"
           value={title}
           onChange={(value) => updateField("title", value)}
           placeholder="모임 제목을 입력해주세요"
@@ -37,8 +38,9 @@ export default function MeetingInfoFields({
         <CharacterCount current={title.length} max={MAX_TITLE_LENGTH} />
       </FormSection>
 
-      <FormSection label="모임 설명" required>
+      <FormSection label="모임 설명" htmlFor="meeting-description" required>
         <textarea
+          id="meeting-description"
           value={description}
           onChange={(event) => updateField("description", event.target.value)}
           placeholder="어떤 모임인지 자세히 소개해주세요"
