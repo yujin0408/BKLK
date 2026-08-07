@@ -8,11 +8,13 @@ import { SelectedBook } from "@/features/books/types";
 
 interface BookSelectFieldProps {
   book: SelectedBook | null;
+  error?: string;
   onClick: () => void;
 }
 
 export default function BookSelectField({
   book,
+  error,
   onClick,
 }: BookSelectFieldProps) {
   return (
@@ -71,6 +73,11 @@ export default function BookSelectField({
             </p>
           </div>
         </button>
+      )}
+      {error && (
+        <p role="alert" className="mt-2 text-sm text-error">
+          {error}
+        </p>
       )}
     </FormSection>
   );

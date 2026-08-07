@@ -6,11 +6,13 @@ import { ChangeEvent, useEffect, useRef, useState } from "react";
 import FormSection from "@/components/layout/FormSection";
 
 interface MeetingThumbnailFieldProps {
+  error?: string;
   onChange: (file: File | null) => void;
 }
 
 export default function MeetingThumbnailField({
   onChange,
+  error,
 }: MeetingThumbnailFieldProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -100,6 +102,11 @@ export default function MeetingThumbnailField({
           </div>
         )}
       </div>
+      {error && (
+        <p role="alert" className="mt-2 text-sm text-error">
+          {error}
+        </p>
+      )}
     </FormSection>
   );
 }

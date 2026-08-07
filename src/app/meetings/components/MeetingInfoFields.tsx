@@ -1,20 +1,22 @@
 import CharacterCount from "@/components/common/CharacterCount";
 import Input from "@/components/common/Input";
 import FormSection from "@/components/layout/FormSection";
-import { MeetingFormValues } from "@/features/meetings/types";
+import { MAX_DESCRIPTION_LENGTH, MAX_TITLE_LENGTH } from "@/constants/meetings";
 
 interface Props {
   title: string;
   description: string;
-  updateField: <K extends keyof MeetingFormValues>(
-    key: K,
-    value: MeetingFormValues[K],
-  ) => void;
+  errors?: {
+    title?: string;
+    description?: string;
+  };
+  updateField: (field: "title" | "description", value: string) => void;
 }
 
 export default function MeetingInfoFields({
   title,
   description,
+  errors,
   updateField,
 }: Props) {
   return (
@@ -24,10 +26,15 @@ export default function MeetingInfoFields({
           value={title}
           onChange={(value) => updateField("title", value)}
           placeholder="모임 제목을 입력해주세요"
-          maxLength={50}
+          maxLength={MAX_TITLE_LENGTH}
         />
+        {errors?.title && (
+          <p role="alert" className="mt-1 text-sm text-error">
+            {errors.title}
+          </p>
+        )}
 
-        <CharacterCount current={title.length} max={50} />
+        <CharacterCount current={title.length} max={MAX_TITLE_LENGTH} />
       </FormSection>
 
       <FormSection label="모임 설명" required>
@@ -35,7 +42,7 @@ export default function MeetingInfoFields({
           value={description}
           onChange={(event) => updateField("description", event.target.value)}
           placeholder="어떤 모임인지 자세히 소개해주세요"
-          maxLength={1000}
+          maxLength={MAX_DESCRIPTION_LENGTH}
           className="
             min-h-48 w-full resize-none rounded-xl border
             border-line-100 px-4 py-3 text-base text-black-900
@@ -43,6 +50,11 @@ export default function MeetingInfoFields({
             focus:border-active
           "
         />
+        {errors?.description && (
+          <p role="alert" className="mt-1 text-sm text-error">
+            {errors.description}
+          </p>
+        )}
 
         <CharacterCount current={description.length} max={1000} />
       </FormSection>

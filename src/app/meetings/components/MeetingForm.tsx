@@ -7,9 +7,32 @@ import MeetingInfoFields from "./MeetingInfoFields";
 import MeetingLocationFields from "./MeetingLocationFields";
 import MeetingScheduleFields from "./MeetingScheduleFields";
 import MeetingThumbnailField from "./MeetingThumbnailField";
-import useMeetingForm from "@/features/meetings/hooks/useMeetingForm";
 import BookSelectField from "./BookSelectFiled";
 import BookSearchModal from "@/features/books/components/BookSearchModal";
+import AddressSearchModal from "@/features/locations/components/AddressSearchModal";
+import useMeetingForm from "@/features/meetings/hooks/useMeetingForm";
+import validateMeetingForm, {
+  MeetingFormErrors,
+  MeetingFormField,
+} from "@/features/meetings/utils/validateMeetingForm";
+import toMeetingAtIso from "@/features/meetings/utils/toMeetingAtIso";
+import createMeeting from "@/features/meetings/api/createMeeting";
+
+const MEETING_FORM_FIELDS = [
+  "book",
+  "title",
+  "description",
+  "meetingDate",
+  "meetingTime",
+  "capacity",
+  "address",
+  "detailAddress",
+  "thumbnail",
+] as const satisfies readonly MeetingFormField[];
+
+function isMeetingFormField(field: PropertyKey): field is MeetingFormField {
+  return MEETING_FORM_FIELDS.some((formField) => formField === field);
+}
 
 export default function MeetingForm() {
   const router = useRouter();
@@ -21,12 +44,27 @@ export default function MeetingForm() {
     updateField,
     setSelectedBook,
     setThumbnailFile,
+    selectLocation,
   } = useMeetingForm();
 
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
-  const [, setIsAddressModalOpen] = useState(false);
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<MeetingFormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const clearFieldError = (field: keyof MeetingFormErrors) => {
+    setFieldErrors((previousErrors) => {
+      if (!previousErrors[field]) {
+        return previousErrors;
+      }
+
+      const nextErrors = { ...previousErrors };
+      delete nextErrors[field];
+
+      return nextErrors;
+    });
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -35,43 +73,47 @@ export default function MeetingForm() {
 
     setSubmitError(null);
 
-    if (!selectedBook) {
-      setSubmitError("함께 읽을 책을 선택해주세요.");
+    const validationErrors = validateMeetingForm({
+      values,
+      selectedBook,
+      thumbnailFile,
+    });
+
+    if (Object.keys(validationErrors).length > 0) {
+      setFieldErrors(validationErrors);
+      setSubmitError("입력 내용을 확인해주세요.");
+      return;
+    }
+
+    setFieldErrors({});
+
+    /*
+     * validateMeetingForm을 통과했으므로 실제로 값이 존재하지만,
+     * TypeScript는 외부 함수의 검증 결과까지 추론하지 못합니다.
+     */
+    if (
+      !selectedBook ||
+      !values.meetingDate ||
+      values.longitude === null ||
+      values.latitude === null
+    ) {
+      setSubmitError("입력 내용을 다시 확인해주세요.");
       return;
     }
 
     try {
       setIsSubmitting(true);
 
-      console.log({
+      const meetingAt = toMeetingAtIso(values.meetingDate, values.meetingTime);
+
+      const meeting = await createMeeting({
         values,
-        selectedBook,
+        bookId: selectedBook.id,
+        meetingAt,
         thumbnailFile,
       });
 
-      /*
-       * 이후 아래 순서로 등록 로직을 구현하면 됩니다.
-       *
-       * 1. 폼 입력값 검증
-       * 2. 선택한 책을 books 테이블에 저장하고 bookId 반환
-       * 3. 대표 이미지가 있으면 Storage에 업로드
-       * 4. 날짜와 시간을 meeting_at으로 결합
-       * 5. meetings 테이블에 모임 등록
-       * 6. 생성된 모임 상세 페이지로 이동
-       *
-       * const bookId = await saveBook(selectedBook);
-       * const thumbnailUrl = thumbnailFile
-       *   ? await uploadMeetingThumbnail(thumbnailFile)
-       *   : null;
-       *
-       * const meeting = await createMeeting({
-       *   ...values,
-       *   bookId,
-       *   thumbnailUrl,
-       * });
-       *
-       * router.push(`/meetings/${meeting.id}`);
-       */
+      router.replace(`/meetings/${meeting.id}`);
     } catch (error) {
       console.error("모임 등록에 실패했습니다.", error);
 
@@ -87,7 +129,7 @@ export default function MeetingForm() {
 
   return (
     <>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} noValidate>
         <div className="mb-10 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-black-900">내 모임 만들기</h1>
         </div>
@@ -95,13 +137,24 @@ export default function MeetingForm() {
         <div className="space-y-8">
           <BookSelectField
             book={selectedBook}
+            error={fieldErrors.book}
             onClick={() => setIsBookModalOpen(true)}
           />
 
           <MeetingInfoFields
             title={values.title}
             description={values.description}
-            updateField={updateField}
+            errors={{
+              title: fieldErrors.title,
+              description: fieldErrors.description,
+            }}
+            updateField={(field, value) => {
+              updateField(field, value);
+
+              if (isMeetingFormField(field)) {
+                clearFieldError(field);
+              }
+            }}
           />
 
           <MeetingScheduleFields
@@ -110,19 +163,41 @@ export default function MeetingForm() {
               meetingTime: values.meetingTime,
               capacity: values.capacity,
             }}
-            updateField={updateField}
+            errors={{
+              meetingDate: fieldErrors.meetingDate,
+              meetingTime: fieldErrors.meetingTime,
+              capacity: fieldErrors.capacity,
+            }}
+            updateField={(field, value) => {
+              updateField(field, value);
+
+              if (isMeetingFormField(field)) {
+                clearFieldError(field);
+              }
+            }}
           />
 
           <MeetingLocationFields
             address={values.address}
             detailAddress={values.detailAddress}
+            errors={{
+              address: fieldErrors.address,
+              detailAddress: fieldErrors.detailAddress,
+            }}
             onSearch={() => setIsAddressModalOpen(true)}
-            onDetailAddressChange={(value) =>
-              updateField("detailAddress", value)
-            }
+            onDetailAddressChange={(value) => {
+              updateField("detailAddress", value);
+              clearFieldError("detailAddress");
+            }}
           />
 
-          <MeetingThumbnailField onChange={setThumbnailFile} />
+          <MeetingThumbnailField
+            error={fieldErrors.thumbnail}
+            onChange={(file) => {
+              setThumbnailFile(file);
+              clearFieldError("thumbnail");
+            }}
+          />
         </div>
 
         {submitError && (
@@ -142,7 +217,17 @@ export default function MeetingForm() {
         onOpenChange={setIsBookModalOpen}
         onSelect={(book) => {
           setSelectedBook(book);
+          clearFieldError("book");
           setIsBookModalOpen(false);
+        }}
+      />
+
+      <AddressSearchModal
+        open={isAddressModalOpen}
+        onOpenChange={setIsAddressModalOpen}
+        onSelect={(location) => {
+          selectLocation(location);
+          clearFieldError("address");
         }}
       />
     </>

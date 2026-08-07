@@ -7,6 +7,7 @@ import SearchInput from "@/components/common/SearchInput";
 import RegionFilter from "@/components/region/RegionFilter";
 import { getMeetings } from "@/features/meetings/api/meetings";
 import { MeetingCardData } from "@/features/meetings/types";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const options = [
@@ -108,12 +109,21 @@ export default function Meetings() {
 
   return (
     <main className="mx-auto w-full max-w-[1280px] px-6 pb-16 pt-10">
-      <header>
-        <h1 className="text-3xl font-bold text-black-900">Link</h1>
-        <p className="mt-2 text-sm text-gray-400">
-          관심 있는 지역과 날짜의 모임을 찾아보세요.
-        </p>
-      </header>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">모임 찾기</h1>
+          <p className="mt-2 text-gray-500">
+            관심 있는 지역과 날짜의 모임을 찾아보세요.
+          </p>
+        </div>
+
+        <Link
+          href="/meetings/new"
+          className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-primary/90 bg-brand-primary"
+        >
+          모임 만들기
+        </Link>
+      </div>
 
       <section className="mt-8">
         <SearchInput
