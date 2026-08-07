@@ -3,7 +3,7 @@
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import { supabase } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 
@@ -16,6 +16,12 @@ type SignUpForm = {
 
 function SignUp() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const redirect = searchParams.get("redirect");
+
+  const redirectPath =
+    redirect?.startsWith("/") && !redirect.startsWith("//") ? redirect : "/";
 
   const {
     control,
@@ -38,12 +44,12 @@ function SignUp() {
       } = await supabase.auth.getSession();
 
       if (session) {
-        router.replace("/");
+        router.replace(redirectPath);
       }
     };
 
     checkSession();
-  }, [router]);
+  }, [router, redirectPath]);
 
   const onSubmit = async (formData: SignUpForm) => {
     const { data, error } = await supabase.auth.signUp({
@@ -61,16 +67,23 @@ function SignUp() {
       return;
     }
 
-    // 이메일 인증 OFF면 session이 있음 → 바로 로그인 상태
+    // 이메일 인증 OFF
+    // 회원가입과 동시에 로그인 상태가 되므로 바로 원래 목적지로 이동
     if (data.session) {
       alert("회원가입이 완료되었습니다.");
-      router.push("/");
+      router.push(redirectPath);
       return;
     }
 
-    // 이메일 인증 ON이면 session이 없음
+    // 이메일 인증 ON
+    // 로그인 페이지로 이동하되 기존 redirect 값을 유지
     alert("인증 메일을 확인해주세요.");
-    router.push("/login");
+
+    router.push(
+      redirect
+        ? `/login?redirect=${encodeURIComponent(redirectPath)}`
+        : "/login",
+    );
   };
 
   return (
@@ -88,6 +101,7 @@ function SignUp() {
         render={({ field }) => (
           <Input
             label="이메일"
+            type="email"
             value={field.value}
             onChange={field.onChange}
             required
@@ -158,7 +172,7 @@ function SignUp() {
         )}
       />
 
-      <div className="text-right mt-4">
+      <div className="mt-4 text-right">
         <Button
           fullWidth
           className="min-w-40"

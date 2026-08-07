@@ -4,7 +4,7 @@ import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import { supabase } from "@/lib/supabase/client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
@@ -15,6 +15,10 @@ type SignInForm = {
 
 function Login() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect");
+  const redirectPath =
+    redirect?.startsWith("/") && !redirect.startsWith("//") ? redirect : "/";
   const {
     control,
     handleSubmit,
@@ -53,7 +57,7 @@ function Login() {
 
     console.log(data);
     alert("로그인 성공");
-    router.push("/");
+    router.push(redirectPath);
   };
 
   return (
@@ -90,7 +94,16 @@ function Login() {
         )}
       />
       <p className="text-right pt-2 text-sm">
-        계정이 없으신가요? <Link href="/sign-up">회원가입</Link>
+        계정이 없으신가요?{" "}
+        <Link
+          href={
+            redirect
+              ? `/sign-up?redirect=${encodeURIComponent(redirect)}`
+              : "/sign-up"
+          }
+        >
+          회원가입
+        </Link>
       </p>
       <div className="text-right mt-5">
         <Button
