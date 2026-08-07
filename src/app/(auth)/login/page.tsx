@@ -4,7 +4,7 @@ import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import { supabase } from "@/lib/supabase/client";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 
@@ -15,10 +15,8 @@ type SignInForm = {
 
 function Login() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect");
-  const redirectPath =
-    redirect?.startsWith("/") && !redirect.startsWith("//") ? redirect : "/";
+  const [signUpHref, setSignUpHref] = useState("/signup");
+
   const {
     control,
     handleSubmit,
@@ -30,14 +28,30 @@ function Login() {
     },
   });
 
+  const getRedirectPath = () => {
+    const redirect = new URLSearchParams(window.location.search).get(
+      "redirect",
+    );
+
+    return redirect?.startsWith("/") && !redirect.startsWith("//")
+      ? redirect
+      : "/";
+  };
+
   useEffect(() => {
+    const redirectPath = getRedirectPath();
+
+    if (redirectPath !== "/") {
+      setSignUpHref(`/signup?redirect=${encodeURIComponent(redirectPath)}`);
+    }
+
     const checkSession = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
       if (session) {
-        router.replace("/");
+        router.replace(redirectPath);
       }
     };
 
@@ -45,7 +59,7 @@ function Login() {
   }, [router]);
 
   const handleLogin = async (formData: SignInForm) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email: formData.email,
       password: formData.password,
     });
@@ -55,9 +69,8 @@ function Login() {
       return;
     }
 
-    console.log(data);
     alert("로그인 성공");
-    router.push(redirectPath);
+    router.push(getRedirectPath());
   };
 
   return (
@@ -65,10 +78,13 @@ function Login() {
       <Controller
         name="email"
         control={control}
-        rules={{ required: "이메일을 입력해주세요." }}
+        rules={{
+          required: "이메일을 입력해주세요.",
+        }}
         render={({ field }) => (
           <Input
             label="이메일"
+            type="email"
             value={field.value}
             onChange={field.onChange}
             errorMessage={errors.email?.message}
@@ -93,19 +109,12 @@ function Login() {
           />
         )}
       />
-      <p className="text-right pt-2 text-sm">
-        계정이 없으신가요?{" "}
-        <Link
-          href={
-            redirect
-              ? `/sign-up?redirect=${encodeURIComponent(redirect)}`
-              : "/sign-up"
-          }
-        >
-          회원가입
-        </Link>
+
+      <p className="pt-2 text-right text-sm">
+        계정이 없으신가요? <Link href={signUpHref}>회원가입</Link>
       </p>
-      <div className="text-right mt-5">
+
+      <div className="mt-5 text-right">
         <Button
           fullWidth
           type="submit"

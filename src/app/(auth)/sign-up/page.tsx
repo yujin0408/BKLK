@@ -3,7 +3,7 @@
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
 import { supabase } from "@/lib/supabase/client";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 
@@ -16,12 +16,6 @@ type SignUpForm = {
 
 function SignUp() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const redirect = searchParams.get("redirect");
-
-  const redirectPath =
-    redirect?.startsWith("/") && !redirect.startsWith("//") ? redirect : "/";
 
   const {
     control,
@@ -37,6 +31,16 @@ function SignUp() {
     },
   });
 
+  const getRedirectPath = () => {
+    const redirect = new URLSearchParams(window.location.search).get(
+      "redirect",
+    );
+
+    return redirect?.startsWith("/") && !redirect.startsWith("//")
+      ? redirect
+      : "/";
+  };
+
   useEffect(() => {
     const checkSession = async () => {
       const {
@@ -44,12 +48,12 @@ function SignUp() {
       } = await supabase.auth.getSession();
 
       if (session) {
-        router.replace(redirectPath);
+        router.replace(getRedirectPath());
       }
     };
 
     checkSession();
-  }, [router, redirectPath]);
+  }, [router]);
 
   const onSubmit = async (formData: SignUpForm) => {
     const { data, error } = await supabase.auth.signUp({
@@ -67,6 +71,8 @@ function SignUp() {
       return;
     }
 
+    const redirectPath = getRedirectPath();
+
     // 이메일 인증 OFF
     // 회원가입과 동시에 로그인 상태가 되므로 바로 원래 목적지로 이동
     if (data.session) {
@@ -80,7 +86,7 @@ function SignUp() {
     alert("인증 메일을 확인해주세요.");
 
     router.push(
-      redirect
+      redirectPath !== "/"
         ? `/login?redirect=${encodeURIComponent(redirectPath)}`
         : "/login",
     );
