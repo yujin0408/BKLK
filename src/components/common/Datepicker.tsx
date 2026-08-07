@@ -6,13 +6,23 @@ import { useRef, useState } from "react";
 import { DayPicker } from "react-day-picker";
 import { ko } from "react-day-picker/locale";
 import Input from "./Input";
+import { cn } from "@/utils/cn";
 
 interface DatePickerProps {
   value?: Date;
   onChange: (date: Date | undefined) => void;
+  inputClassName?: string;
+  className?: string;
+  id?: string;
 }
 
-function DatePicker({ value, onChange }: DatePickerProps) {
+function DatePicker({
+  value,
+  onChange,
+  inputClassName,
+  className,
+  id,
+}: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const datePickerRef = useRef<HTMLDivElement>(null);
 
@@ -47,9 +57,10 @@ function DatePicker({ value, onChange }: DatePickerProps) {
   };
 
   return (
-    <div ref={datePickerRef} className="relative inline-block">
+    <div ref={datePickerRef} className={cn("relative inline-block", className)}>
       <div className="relative">
         <Input
+          id={id}
           value={inputValue}
           readOnly
           onClick={() => setIsOpen(true)}
@@ -65,7 +76,10 @@ function DatePicker({ value, onChange }: DatePickerProps) {
           }}
           aria-haspopup="dialog"
           aria-expanded={isOpen}
-          inputClassName="h-[42px] w-[150px] cursor-pointer"
+          inputClassName={cn(
+            "h-[42px] w-[150px] cursor-pointer",
+            inputClassName,
+          )}
         />
 
         <CalendarDays
