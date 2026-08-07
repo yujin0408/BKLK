@@ -15,6 +15,7 @@ type SignInForm = {
 
 function Login() {
   const router = useRouter();
+
   const {
     control,
     handleSubmit,
@@ -26,6 +27,16 @@ function Login() {
     },
   });
 
+  const getRedirectPath = () => {
+    const redirect = new URLSearchParams(window.location.search).get(
+      "redirect",
+    );
+
+    return redirect?.startsWith("/") && !redirect.startsWith("//")
+      ? redirect
+      : "/";
+  };
+
   useEffect(() => {
     const checkSession = async () => {
       const {
@@ -33,7 +44,7 @@ function Login() {
       } = await supabase.auth.getSession();
 
       if (session) {
-        router.replace("/");
+        router.replace(getRedirectPath());
       }
     };
 
@@ -41,7 +52,7 @@ function Login() {
   }, [router]);
 
   const handleLogin = async (formData: SignInForm) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email: formData.email,
       password: formData.password,
     });
@@ -51,9 +62,8 @@ function Login() {
       return;
     }
 
-    console.log(data);
     alert("로그인 성공");
-    router.push("/");
+    router.push(getRedirectPath());
   };
 
   return (
@@ -61,10 +71,13 @@ function Login() {
       <Controller
         name="email"
         control={control}
-        rules={{ required: "이메일을 입력해주세요." }}
+        rules={{
+          required: "이메일을 입력해주세요.",
+        }}
         render={({ field }) => (
           <Input
             label="이메일"
+            type="email"
             value={field.value}
             onChange={field.onChange}
             errorMessage={errors.email?.message}
@@ -89,10 +102,27 @@ function Login() {
           />
         )}
       />
-      <p className="text-right pt-2 text-sm">
-        계정이 없으신가요? <Link href="/sign-up">회원가입</Link>
+
+      <p className="pt-2 text-right text-sm">
+        계정이 없으신가요?{" "}
+        <button
+          type="button"
+          onClick={() => {
+            const redirectPath = getRedirectPath();
+
+            router.push(
+              redirectPath !== "/"
+                ? `/sign-up?redirect=${encodeURIComponent(redirectPath)}`
+                : "/sign-up",
+            );
+          }}
+          className="underline cursor-pointer "
+        >
+          회원가입
+        </button>
       </p>
-      <div className="text-right mt-5">
+
+      <div className="mt-5 text-right">
         <Button
           fullWidth
           type="submit"
