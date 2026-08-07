@@ -1,5 +1,6 @@
 "use client";
 
+import Button from "@/components/common/Button";
 import DatePicker from "@/components/common/Datepicker";
 import Dropdown from "@/components/common/Dropdown";
 import MeetingCard from "@/components/common/MeetingCard";
@@ -7,7 +8,8 @@ import SearchInput from "@/components/common/SearchInput";
 import RegionFilter from "@/components/region/RegionFilter";
 import { getMeetings } from "@/features/meetings/api/meetings";
 import { MeetingCardData } from "@/features/meetings/types";
-import Link from "next/link";
+import { supabase } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 const options = [
@@ -26,6 +28,7 @@ function formatDate(date: Date) {
 }
 
 export default function Meetings() {
+  const router = useRouter();
   const [meetings, setMeetings] = useState<MeetingCardData[]>([]);
   const [keyword, setKeyword] = useState("");
   const [value, setValue] = useState("all");
@@ -91,6 +94,19 @@ export default function Meetings() {
     };
   }, [debouncedKeyword, value, date, regionFilter]);
 
+  const handleCreateMeeting = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      router.push("/login?redirect=/meetings/new");
+      return;
+    }
+
+    router.push("/meetings/new");
+  };
+
   const statusOrder = {
     recruiting: 0,
     admission_closing: 1,
@@ -117,12 +133,9 @@ export default function Meetings() {
           </p>
         </div>
 
-        <Link
-          href="/meetings/new"
-          className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-primary/90 bg-brand-primary"
-        >
+        <Button onClick={handleCreateMeeting} variant="outline" size="sm">
           모임 만들기
-        </Link>
+        </Button>
       </div>
 
       <section className="mt-8">
