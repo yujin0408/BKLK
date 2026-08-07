@@ -15,7 +15,6 @@ type SignInForm = {
 
 function Login() {
   const router = useRouter();
-  const [signUpHref, setSignUpHref] = useState("/signup");
 
   const {
     control,
@@ -39,19 +38,13 @@ function Login() {
   };
 
   useEffect(() => {
-    const redirectPath = getRedirectPath();
-
-    if (redirectPath !== "/") {
-      setSignUpHref(`/signup?redirect=${encodeURIComponent(redirectPath)}`);
-    }
-
     const checkSession = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
       if (session) {
-        router.replace(redirectPath);
+        router.replace(getRedirectPath());
       }
     };
 
@@ -111,7 +104,22 @@ function Login() {
       />
 
       <p className="pt-2 text-right text-sm">
-        계정이 없으신가요? <Link href={signUpHref}>회원가입</Link>
+        계정이 없으신가요?{" "}
+        <button
+          type="button"
+          onClick={() => {
+            const redirectPath = getRedirectPath();
+
+            router.push(
+              redirectPath !== "/"
+                ? `/sign-up?redirect=${encodeURIComponent(redirectPath)}`
+                : "/sign-up",
+            );
+          }}
+          className="underline cursor-pointer "
+        >
+          회원가입
+        </button>
       </p>
 
       <div className="mt-5 text-right">
