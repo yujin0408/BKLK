@@ -3,6 +3,7 @@ interface FormSectionProps {
   description?: string;
   required?: boolean;
   children: React.ReactNode;
+  htmlFor: string;
 }
 
 export default function FormSection({
@@ -10,10 +11,14 @@ export default function FormSection({
   description,
   required = false,
   children,
+  htmlFor,
 }: FormSectionProps) {
   return (
     <section>
-      <label className="mb-3 block text-base font-semibold text-black-900">
+      <label
+        htmlFor={htmlFor}
+        className="mb-3 block text-base font-semibold text-black-900"
+      >
         {label}
 
         {required && (

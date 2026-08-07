@@ -12,19 +12,18 @@ interface BookSelectFieldProps {
   onClick: () => void;
 }
 
+const BOOK_SELECT_ID = "meeting-book";
+
 export default function BookSelectField({
   book,
   error,
   onClick,
 }: BookSelectFieldProps) {
   return (
-    <FormSection
-      label="함께 읽을 책"
-      description="모임에서 함께 읽을 책을 선택해주세요."
-    >
+    <FormSection label="함께 읽을 책" required htmlFor={BOOK_SELECT_ID}>
       {book ? (
-        <div className="flex items-center gap-5 rounded-xl border border-gray-100 p-5">
-          <div className="relative h-[140px] w-[100px] shrink-0 overflow-hidden rounded-md bg-gray-100">
+        <div className="flex items-center gap-4">
+          <div className="relative h-[140px] w-[100px] shrink-0 overflow-hidden rounded-lg">
             <Image
               src={book.coverImageUrl || "/card_thumbnail.png"}
               alt={`${book.title} 표지`}
@@ -48,12 +47,19 @@ export default function BookSelectField({
             )}
           </div>
 
-          <Button type="button" variant="outline" size="sm" onClick={onClick}>
-            <Search size={16} />책 변경
+          <Button
+            id={BOOK_SELECT_ID}
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onClick}
+          >
+            <Search size={16} aria-hidden="true" />책 변경
           </Button>
         </div>
       ) : (
         <button
+          id={BOOK_SELECT_ID}
           type="button"
           onClick={onClick}
           className="
@@ -64,7 +70,7 @@ export default function BookSelectField({
             hover:border-black-900 hover:text-black-900
           "
         >
-          <Search size={28} />
+          <Search size={28} aria-hidden="true" />
 
           <div className="text-center">
             <p className="font-medium">책을 검색해주세요</p>
@@ -74,6 +80,7 @@ export default function BookSelectField({
           </div>
         </button>
       )}
+
       {error && (
         <p role="alert" className="mt-2 text-sm text-error">
           {error}

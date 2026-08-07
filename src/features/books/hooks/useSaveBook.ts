@@ -7,10 +7,8 @@ export function useSaveBook() {
 
   return useMutation<SelectedBook, Error, CreateBookInput>({
     mutationFn: saveBook,
-    onSuccess: (data) => {
-      // invalidate any relevant caches
+    onSuccess: () => {
       qc.invalidateQueries(["books"]);
-      qc.invalidateQueries(["books", "bestsellers"]);
     },
   });
 }

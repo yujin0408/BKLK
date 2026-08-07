@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef } from "react";
+import { X } from "lucide-react";
 import BookSearchInput from "./BookSearchInput";
 import BookSearchResultList from "./BookSearchResultList";
 import { useBestsellers } from "@/features/books/hooks/useBestsellers";
@@ -8,7 +9,6 @@ import { useBookSearch } from "@/features/books/hooks/useBookSearch";
 import { useSaveBook } from "@/features/books/hooks/useSaveBook";
 import { BookSearchResult } from "@/features/books/types";
 import { toCreateBookInput } from "@/features/books/utils/mapAladinBook";
-import { X } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -27,6 +27,7 @@ export default function BookSearchModal({
   onSelect,
 }: Props) {
   const bestsellers = useBestsellers();
+
   const {
     keyword,
     setKeyword,
@@ -37,12 +38,18 @@ export default function BookSearchModal({
     isFetching,
     isError,
   } = useBookSearch();
+
   const saveMutation = useSaveBook();
 
   const titleId = useId();
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const previousFocusedElementRef = useRef<HTMLElement | null>(null);
-  const dialogRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const onOpenChangeRef = useRef(onOpenChange);
+
+  useEffect(() => {
+    onOpenChangeRef.current = onOpenChange;
+  }, [onOpenChange]);
 
   useEffect(() => {
     if (!open) {
@@ -62,7 +69,7 @@ export default function BookSearchModal({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        onOpenChange(false);
+        onOpenChangeRef.current(false);
         return;
       }
 
@@ -104,10 +111,11 @@ export default function BookSearchModal({
           event.preventDefault();
           lastElement.focus();
         }
-      } else if (
-        activeElement === lastElement ||
-        !dialog.contains(activeElement)
-      ) {
+
+        return;
+      }
+
+      if (activeElement === lastElement || !dialog.contains(activeElement)) {
         event.preventDefault();
         firstElement.focus();
       }
@@ -119,9 +127,9 @@ export default function BookSearchModal({
       document.removeEventListener("keydown", handleKeyDown);
       previousFocusedElementRef.current?.focus();
     };
-  }, [open, onOpenChange]);
+  }, [open]);
 
-  const isSearching = !!submittedKeyword;
+  const isSearching = Boolean(submittedKeyword);
   const items = isSearching ? (data ?? []) : (bestsellers.data ?? []);
   const loading = isSearching ? isFetching : bestsellers.isFetching;
 
@@ -137,6 +145,7 @@ export default function BookSearchModal({
       onOpenChange(false);
     } catch (error) {
       console.error(error);
+
       alert(
         error instanceof Error
           ? error.message
@@ -148,7 +157,7 @@ export default function BookSearchModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-black/40"
         onClick={() => onOpenChange(false)}

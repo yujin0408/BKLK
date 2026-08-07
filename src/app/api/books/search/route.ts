@@ -145,7 +145,7 @@ function isAladinBookItem(value: unknown): value is AladinBookItem {
 
   return (
     "itemId" in value &&
-    (typeof value.itemId === "number" || typeof value.itemId === "string") &&
+    typeof value.itemId === "number" &&
     "title" in value &&
     typeof value.title === "string" &&
     "author" in value &&

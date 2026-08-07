@@ -31,6 +31,7 @@ export default function useMeetingForm() {
       region2DepthName: location.region2DepthName,
       longitude: location.longitude,
       latitude: location.latitude,
+      detailAddress: "",
     }));
   };
 

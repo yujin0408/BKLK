@@ -23,6 +23,7 @@ export default function BookSearchResultItem({
             src={book.coverImageUrl}
             alt={book.title}
             fill
+            sizes="64px"
             className="object-cover"
           />
         ) : (
