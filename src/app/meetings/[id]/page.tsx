@@ -258,8 +258,7 @@ function MeetingDetailPage() {
   };
 
   const handleEdit = () => {
-    setIsMenuOpen(false);
-    router.push(`/meetings/${meeting?.id}/edit`);
+    router.push(`/meetings/${id}/edit`);
   };
 
   const handleDelete = async () => {

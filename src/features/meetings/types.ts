@@ -1,3 +1,5 @@
+import { SelectedBook } from "@/features/books/types";
+
 export interface MeetingEntity {
   id: string;
   title: string;
@@ -67,4 +69,11 @@ export interface BookSearchResult {
   description: string;
   cover: string;
   link: string;
+}
+
+export interface MeetingFormInitialData {
+  values: MeetingFormValues;
+  selectedBook: SelectedBook;
+  thumbnailUrl: string | null;
+  currentParticipants: number;
 }
