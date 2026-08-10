@@ -352,10 +352,11 @@ export async function PATCH(request: Request, context: RouteContext) {
       .eq("id", meetingId)
       .eq("host_user_id", user.id)
       .is("deleted_at", null)
+      .lte("current_participants", capacity)
       .select("id")
       .maybeSingle();
 
-    if (updateError || !updatedMeeting) {
+    if (updateError) {
       console.error("모임 수정 실패", updateError);
 
       if (uploadedThumbnailPath) {
@@ -371,6 +372,26 @@ export async function PATCH(request: Request, context: RouteContext) {
       return NextResponse.json(
         { message: "모임 수정에 실패했습니다." },
         { status: 500 },
+      );
+    }
+
+    if (!updatedMeeting) {
+      if (uploadedThumbnailPath) {
+        const { error: removeError } = await supabase.storage
+          .from(THUMBNAIL_BUCKET)
+          .remove([uploadedThumbnailPath]);
+
+        if (removeError) {
+          console.error("수정 충돌 후 새 이미지 정리 실패", removeError);
+        }
+      }
+
+      return NextResponse.json(
+        {
+          message:
+            "참여 인원이 변경되어 모집 인원을 수정할 수 없습니다. 새로고침 후 다시 시도해주세요.",
+        },
+        { status: 409 },
       );
     }
 

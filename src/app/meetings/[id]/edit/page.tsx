@@ -28,11 +28,15 @@ export default async function EditMeetingPage({
 
   try {
     meeting = await getMeetingById(id);
+
+    if (!meeting) {
+      notFound();
+    }
   } catch {
     notFound();
   }
 
-  if (meeting.host?.id !== user.id) {
+  if (meeting.host_user_id !== user.id) {
     redirect(`/meetings/${id}`);
   }
 
