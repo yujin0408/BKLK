@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
 import { mapMeeting } from "../mapper/meeting.mapper";
+import { MeetingDetail } from "@/app/meetings/[id]/page";
 
 interface GetMeetingsParams {
   keyword?: string;
@@ -59,33 +60,58 @@ export async function getMeetings(params: GetMeetingsParams = {}) {
 }
 
 // 모임 상세 조회
-export async function getMeetingById(id: string) {
+export async function getMeetingById(
+  id: string,
+): Promise<MeetingDetail | null> {
   const { data, error } = await supabase
     .from("meetings")
     .select(
       `
-      *,
-      host:users (
         id,
-        nickname,
-        profile_image_url,
-        description
-      ),
-      book:books (
-        id,
+        host_user_id,
+        book_id,
         title,
-        author,
         description,
-        cover_image_url
-      )
-    `,
+        thumbnail_url,
+        meeting_at,
+        capacity,
+        current_participants,
+        status,
+        address,
+        detail_address,
+        region_1depth_name,
+        region_2depth_name,
+        longitude,
+        latitude,
+        created_at,
+        host:users (
+          id,
+          nickname,
+          profile_image_url,
+          description
+        ),
+        book:books (
+          id,
+          title,
+          author,
+          cover_image_url
+        )
+      `,
     )
     .eq("id", id)
     .is("deleted_at", null)
-    .single();
+    .returns<MeetingDetail[]>()
+    .maybeSingle();
 
   if (error) {
-    throw new Error(error.message);
+    console.error("모임 상세 조회 실패", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+
+    throw new Error("모임 정보를 불러오지 못했습니다.");
   }
 
   return data;

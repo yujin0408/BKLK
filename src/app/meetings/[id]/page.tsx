@@ -24,7 +24,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-interface MeetingDetail {
+export interface MeetingDetail {
   id: string;
   title: string;
   description: string;
@@ -39,6 +39,7 @@ interface MeetingDetail {
   region_2depth_name: string;
   longitude: number;
   latitude: number;
+  host_user_id: string;
 
   host: {
     id: string;
@@ -258,8 +259,7 @@ function MeetingDetailPage() {
   };
 
   const handleEdit = () => {
-    setIsMenuOpen(false);
-    router.push(`/meetings/${meeting?.id}/edit`);
+    router.push(`/meetings/${id}/edit`);
   };
 
   const handleDelete = async () => {

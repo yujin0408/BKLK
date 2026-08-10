@@ -17,6 +17,8 @@ import validateMeetingForm, {
 } from "@/features/meetings/utils/validateMeetingForm";
 import toMeetingAtIso from "@/features/meetings/utils/toMeetingAtIso";
 import createMeeting from "@/features/meetings/api/createMeeting";
+import updateMeeting from "@/features/meetings/api/updateMeeting";
+import { MeetingFormInitialData } from "@/features/meetings/types";
 
 const MEETING_FORM_FIELDS = [
   "book",
@@ -34,7 +36,22 @@ function isMeetingFormField(field: PropertyKey): field is MeetingFormField {
   return MEETING_FORM_FIELDS.some((formField) => formField === field);
 }
 
-export default function MeetingForm() {
+type MeetingFormProps =
+  | {
+      mode?: "create";
+      meetingId?: never;
+      initialData?: never;
+    }
+  | {
+      mode: "edit";
+      meetingId: string;
+      initialData: MeetingFormInitialData;
+    };
+
+export default function MeetingForm(props: MeetingFormProps) {
+  const mode = props.mode ?? "create";
+  const initialData = mode === "edit" ? props.initialData : undefined;
+
   const router = useRouter();
 
   const {
@@ -45,13 +62,14 @@ export default function MeetingForm() {
     setSelectedBook,
     setThumbnailFile,
     selectLocation,
-  } = useMeetingForm();
+  } = useMeetingForm(initialData);
 
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<MeetingFormErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [removeThumbnail, setRemoveThumbnail] = useState(false);
 
   const clearFieldError = (field: keyof MeetingFormErrors) => {
     setFieldErrors((previousErrors) => {
@@ -77,6 +95,8 @@ export default function MeetingForm() {
       values,
       selectedBook,
       thumbnailFile,
+      minimumCapacity:
+        mode === "edit" ? initialData?.currentParticipants : undefined,
     });
 
     if (Object.keys(validationErrors).length > 0) {
@@ -87,10 +107,6 @@ export default function MeetingForm() {
 
     setFieldErrors({});
 
-    /*
-     * validateMeetingForm을 통과했으므로 실제로 값이 존재하지만,
-     * TypeScript는 외부 함수의 검증 결과까지 추론하지 못합니다.
-     */
     if (
       !selectedBook ||
       !values.meetingDate ||
@@ -106,21 +122,39 @@ export default function MeetingForm() {
 
       const meetingAt = toMeetingAtIso(values.meetingDate, values.meetingTime);
 
-      const meeting = await createMeeting({
-        values,
-        bookId: selectedBook.id,
-        meetingAt,
-        thumbnailFile,
-      });
+      const meeting =
+        props.mode === "edit"
+          ? await updateMeeting({
+              meetingId: props.meetingId,
+              values,
+              bookId: selectedBook.id,
+              meetingAt,
+              thumbnailFile,
+              removeThumbnail,
+            })
+          : await createMeeting({
+              values,
+              bookId: selectedBook.id,
+              meetingAt,
+              thumbnailFile,
+            });
 
       router.replace(`/meetings/${meeting.id}`);
+      router.refresh();
     } catch (error) {
-      console.error("모임 등록에 실패했습니다.", error);
+      console.error(
+        mode === "edit"
+          ? "모임 수정에 실패했습니다."
+          : "모임 등록에 실패했습니다.",
+        error,
+      );
 
       setSubmitError(
         error instanceof Error
           ? error.message
-          : "모임 등록 중 오류가 발생했습니다.",
+          : mode === "edit"
+            ? "모임 수정 중 오류가 발생했습니다."
+            : "모임 등록 중 오류가 발생했습니다.",
       );
     } finally {
       setIsSubmitting(false);
@@ -129,10 +163,10 @@ export default function MeetingForm() {
 
   return (
     <>
-      <form onSubmit={handleSubmit} noValidate>
-        <div className="mb-10 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-black-900">내 모임 만들기</h1>
-        </div>
+      <form onSubmit={handleSubmit}>
+        <h1 className="mb-8 text-2xl font-bold">
+          {mode === "edit" ? "모임 수정하기" : "내 모임 만들기"}
+        </h1>
 
         <div className="space-y-8">
           <BookSelectField
@@ -192,9 +226,19 @@ export default function MeetingForm() {
           />
 
           <MeetingThumbnailField
+            initialImageUrl={initialData?.thumbnailUrl}
             error={fieldErrors.thumbnail}
             onChange={(file) => {
               setThumbnailFile(file);
+
+              if (file) {
+                setRemoveThumbnail(false);
+              }
+
+              clearFieldError("thumbnail");
+            }}
+            onRemoveExisting={() => {
+              setRemoveThumbnail(true);
               clearFieldError("thumbnail");
             }}
           />
@@ -228,6 +272,7 @@ export default function MeetingForm() {
         onSelect={(location) => {
           selectLocation(location);
           clearFieldError("address");
+          setIsAddressModalOpen(false);
         }}
       />
     </>

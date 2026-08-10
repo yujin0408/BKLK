@@ -35,6 +35,13 @@ interface ValidateMeetingFormParams {
   thumbnailFile: File | null;
 }
 
+interface ValidateMeetingFormParams {
+  values: MeetingFormValues;
+  selectedBook: SelectedBook | null;
+  thumbnailFile: File | null;
+  minimumCapacity?: number;
+}
+
 const MAX_THUMBNAIL_SIZE = 5 * 1024 * 1024;
 
 const ALLOWED_THUMBNAIL_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -43,6 +50,7 @@ export default function validateMeetingForm({
   values,
   selectedBook,
   thumbnailFile,
+  minimumCapacity,
 }: ValidateMeetingFormParams): MeetingFormErrors {
   const errors: MeetingFormErrors = {};
 
@@ -105,6 +113,8 @@ export default function validateMeetingForm({
     errors.capacity = `모집 인원은 최소 ${MIN_CAPACITY}명입니다.`;
   } else if (capacity > MAX_CAPACITY) {
     errors.capacity = `모집 인원은 최대 ${MAX_CAPACITY}명입니다.`;
+  } else if (minimumCapacity !== undefined && capacity < minimumCapacity) {
+    errors.capacity = `현재 참여 인원인 ${minimumCapacity}명보다 적게 설정할 수 없습니다.`;
   }
 
   if (!values.address.trim()) {
