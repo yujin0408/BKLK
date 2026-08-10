@@ -39,6 +39,7 @@ export interface MeetingDetail {
   region_2depth_name: string;
   longitude: number;
   latitude: number;
+  host_user_id: string;
 
   host: {
     id: string;

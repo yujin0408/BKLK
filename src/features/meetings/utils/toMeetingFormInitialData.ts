@@ -1,35 +1,8 @@
+import { MeetingDetail } from "@/app/meetings/[id]/page";
 import {
   MeetingFormInitialData,
   MeetingFormValues,
 } from "@/features/meetings/types";
-
-export interface EditableMeeting {
-  title: string;
-  description: string;
-  thumbnail_url: string | null;
-  meeting_at: string;
-  capacity: number;
-  current_participants: number;
-  address: string | null;
-  detail_address: string | null;
-  region_1depth_name: string;
-  region_2depth_name: string;
-  longitude: number;
-  latitude: number;
-  host_user_id: string;
-  host: {
-    id: string;
-    nickname: string;
-    profile_image_url: string | null;
-    description: string | null;
-  };
-  book: {
-    id: string;
-    title: string;
-    author: string;
-    cover_image_url: string | null;
-  } | null;
-}
 
 function toKoreanDateParts(meetingAt: string) {
   const formatter = new Intl.DateTimeFormat("en-CA", {
@@ -59,7 +32,7 @@ function toKoreanDateParts(meetingAt: string) {
 }
 
 export default function toMeetingFormInitialData(
-  meeting: EditableMeeting,
+  meeting: MeetingDetail,
 ): MeetingFormInitialData | null {
   if (!meeting.book) {
     return null;
