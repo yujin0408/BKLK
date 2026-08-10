@@ -3,7 +3,7 @@ import {
   MeetingFormValues,
 } from "@/features/meetings/types";
 
-interface EditableMeeting {
+export interface EditableMeeting {
   title: string;
   description: string;
   thumbnail_url: string | null;
@@ -16,6 +16,13 @@ interface EditableMeeting {
   region_2depth_name: string;
   longitude: number;
   latitude: number;
+  host_user_id: string;
+  host: {
+    id: string;
+    nickname: string;
+    profile_image_url: string | null;
+    description: string | null;
+  };
   book: {
     id: string;
     title: string;

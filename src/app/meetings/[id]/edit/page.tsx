@@ -24,15 +24,9 @@ export default async function EditMeetingPage({
     redirect(`/login?redirect=/meetings/${id}/edit`);
   }
 
-  let meeting;
+  const meeting = await getMeetingById(id);
 
-  try {
-    meeting = await getMeetingById(id);
-
-    if (!meeting) {
-      notFound();
-    }
-  } catch {
+  if (!meeting) {
     notFound();
   }
 
@@ -46,9 +40,5 @@ export default async function EditMeetingPage({
     notFound();
   }
 
-  return (
-    <div className="pt-8">
-      <MeetingForm mode="edit" meetingId={id} initialData={initialData} />
-    </div>
-  );
+  return <MeetingForm mode="edit" meetingId={id} initialData={initialData} />;
 }

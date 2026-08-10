@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
 import { mapMeeting } from "../mapper/meeting.mapper";
+import { EditableMeeting } from "../utils/toMeetingFormInitialData";
 
 interface GetMeetingsParams {
   keyword?: string;
@@ -59,7 +60,9 @@ export async function getMeetings(params: GetMeetingsParams = {}) {
 }
 
 // 모임 상세 조회
-export async function getMeetingById(id: string) {
+export async function getMeetingById(
+  id: string,
+): Promise<EditableMeeting | null> {
   const { data, error } = await supabase
     .from("meetings")
     .select(
@@ -84,7 +87,8 @@ export async function getMeetingById(id: string) {
         host:users (
           id,
           nickname,
-          profile_image_url
+          profile_image_url,
+          description
         ),
         book:books (
           id,
@@ -96,11 +100,17 @@ export async function getMeetingById(id: string) {
     )
     .eq("id", id)
     .is("deleted_at", null)
-    .returns()
+    .returns<EditableMeeting[]>()
     .maybeSingle();
 
   if (error) {
-    console.error("모임 상세 조회 실패", error);
+    console.error("모임 상세 조회 실패", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+
     throw new Error("모임 정보를 불러오지 못했습니다.");
   }
 
