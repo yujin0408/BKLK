@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
 import { mapMeeting } from "../mapper/meeting.mapper";
-import { EditableMeeting } from "../utils/toMeetingFormInitialData";
+import { MeetingDetail } from "@/app/meetings/[id]/page";
 
 interface GetMeetingsParams {
   keyword?: string;
@@ -62,7 +62,7 @@ export async function getMeetings(params: GetMeetingsParams = {}) {
 // 모임 상세 조회
 export async function getMeetingById(
   id: string,
-): Promise<EditableMeeting | null> {
+): Promise<MeetingDetail | null> {
   const { data, error } = await supabase
     .from("meetings")
     .select(
@@ -100,7 +100,7 @@ export async function getMeetingById(
     )
     .eq("id", id)
     .is("deleted_at", null)
-    .returns<EditableMeeting[]>()
+    .returns<MeetingDetail[]>()
     .maybeSingle();
 
   if (error) {

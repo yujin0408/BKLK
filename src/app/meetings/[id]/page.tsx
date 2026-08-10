@@ -24,7 +24,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-interface MeetingDetail {
+export interface MeetingDetail {
   id: string;
   title: string;
   description: string;
