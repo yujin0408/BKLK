@@ -462,12 +462,17 @@ function MeetingDetailPage() {
           </div>
         </div>
 
-        <div className="flex gap-12">
-          <KakaoMap
-            latitude={Number(meeting.latitude)}
-            longitude={Number(meeting.longitude)}
-          />
-          <MeetingCalendar meetingAt={meeting.meeting_at} />
+        <div className="flex flex-col gap-8 lg:flex-row lg:gap-12">
+          <div className="min-w-0 flex-1">
+            <KakaoMap
+              latitude={Number(meeting.latitude)}
+              longitude={Number(meeting.longitude)}
+            />
+          </div>
+
+          <div className="shrink-0">
+            <MeetingCalendar meetingAt={meeting.meeting_at} />
+          </div>
         </div>
 
         <div className="mt-10 flex max-w-lg justify-center gap-3 m-auto">
