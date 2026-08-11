@@ -94,6 +94,7 @@ export async function getMeetingById(
           id,
           title,
           author,
+          description,
           cover_image_url
         )
       `,
