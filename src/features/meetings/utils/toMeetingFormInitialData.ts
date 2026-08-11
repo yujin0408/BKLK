@@ -1,4 +1,4 @@
-import { MeetingDetail } from "@/app/meetings/[id]/page";
+import { MeetingDetail } from "@/features/meetings/types";
 import {
   MeetingFormInitialData,
   MeetingFormValues,
@@ -26,24 +26,21 @@ function toKoreanDateParts(meetingAt: string) {
 
   return {
     // DatePicker가 로컬 날짜의 연/월/일만 사용한다는 기준입니다.
-    meetingDate: new Date(year, month - 1, day),
+    meetingDateParts: { year, month, day },
     meetingTime: `${values.hour}:${values.minute}`,
   };
 }
 
 export default function toMeetingFormInitialData(
   meeting: MeetingDetail,
-): MeetingFormInitialData | null {
-  if (!meeting.book) {
-    return null;
-  }
+): MeetingFormInitialData {
+  const { meetingDateParts, meetingTime } = toKoreanDateParts(
+    meeting.meeting_at,
+  );
 
-  const { meetingDate, meetingTime } = toKoreanDateParts(meeting.meeting_at);
-
-  const values: MeetingFormValues = {
+  const values: Omit<MeetingFormValues, "meetingDate"> = {
     title: meeting.title,
     description: meeting.description,
-    meetingDate,
     meetingTime,
     capacity: String(meeting.capacity),
     address: meeting.address ?? "",
@@ -56,13 +53,17 @@ export default function toMeetingFormInitialData(
 
   return {
     values,
-    selectedBook: {
-      id: meeting.book.id,
-      title: meeting.book.title,
-      author: meeting.book.author,
-      coverImageUrl: meeting.book.cover_image_url,
-    },
+    meetingDateParts,
+    selectedBook: meeting.book
+      ? {
+          id: meeting.book.id,
+          title: meeting.book.title,
+          author: meeting.book.author,
+          coverImageUrl: meeting.book.cover_image_url,
+        }
+      : null,
     thumbnailUrl: meeting.thumbnail_url,
     currentParticipants: meeting.current_participants,
+    originalMeetingAt: meeting.meeting_at,
   };
 }

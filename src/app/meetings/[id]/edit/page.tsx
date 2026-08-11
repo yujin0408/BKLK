@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import MeetingForm from "../../components/MeetingForm";
-import { getMeetingById } from "@/features/meetings/api/meetings";
+import { getMeetingByIdOnServer } from "@/features/meetings/api/meetings.server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import toMeetingFormInitialData from "@/features/meetings/utils/toMeetingFormInitialData";
 
@@ -21,10 +21,12 @@ export default async function EditMeetingPage({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect(`/login?redirect=/meetings/${id}/edit`);
+    redirect(
+      `/login?redirect=${encodeURIComponent(`/meetings/${id}/edit`)}`,
+    );
   }
 
-  const meeting = await getMeetingById(id);
+  const meeting = await getMeetingByIdOnServer(id);
 
   if (!meeting) {
     notFound();
@@ -35,10 +37,6 @@ export default async function EditMeetingPage({
   }
 
   const initialData = toMeetingFormInitialData(meeting);
-
-  if (!initialData) {
-    notFound();
-  }
 
   return <MeetingForm mode="edit" meetingId={id} initialData={initialData} />;
 }

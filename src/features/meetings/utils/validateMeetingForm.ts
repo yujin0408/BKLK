@@ -33,13 +33,8 @@ interface ValidateMeetingFormParams {
   values: MeetingFormValues;
   selectedBook: SelectedBook | null;
   thumbnailFile: File | null;
-}
-
-interface ValidateMeetingFormParams {
-  values: MeetingFormValues;
-  selectedBook: SelectedBook | null;
-  thumbnailFile: File | null;
   minimumCapacity?: number;
+  originalMeetingAt?: string;
 }
 
 const MAX_THUMBNAIL_SIZE = 5 * 1024 * 1024;
@@ -51,6 +46,7 @@ export default function validateMeetingForm({
   selectedBook,
   thumbnailFile,
   minimumCapacity,
+  originalMeetingAt,
 }: ValidateMeetingFormParams): MeetingFormErrors {
   const errors: MeetingFormErrors = {};
 
@@ -95,7 +91,15 @@ export default function validateMeetingForm({
 
       const meetingAtTimestamp = new Date(meetingAtIso).getTime();
 
-      if (meetingAtTimestamp <= Date.now()) {
+      const originalMeetingAtTimestamp = originalMeetingAt
+        ? new Date(originalMeetingAt).getTime()
+        : null;
+      const isUnchangedMeetingAt =
+        originalMeetingAtTimestamp !== null &&
+        !Number.isNaN(originalMeetingAtTimestamp) &&
+        meetingAtTimestamp === originalMeetingAtTimestamp;
+
+      if (!isUnchangedMeetingAt && meetingAtTimestamp <= Date.now()) {
         errors.meetingDate = "모임 날짜와 시간은 현재 이후여야 합니다.";
       }
     } catch {

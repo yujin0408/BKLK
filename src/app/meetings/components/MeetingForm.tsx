@@ -97,6 +97,8 @@ export default function MeetingForm(props: MeetingFormProps) {
       thumbnailFile,
       minimumCapacity:
         mode === "edit" ? initialData?.currentParticipants : undefined,
+      originalMeetingAt:
+        mode === "edit" ? initialData?.originalMeetingAt : undefined,
     });
 
     if (Object.keys(validationErrors).length > 0) {

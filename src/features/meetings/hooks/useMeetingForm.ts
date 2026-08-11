@@ -8,9 +8,18 @@ import {
 import { SelectedBook } from "@/features/books/types";
 
 export default function useMeetingForm(initialData?: MeetingFormInitialData) {
-  const [values, setValues] = useState<MeetingFormValues>(
-    () => initialData?.values ?? INITIAL_MEETING_FORM_VALUES,
-  );
+  const [values, setValues] = useState<MeetingFormValues>(() => {
+    if (!initialData) {
+      return INITIAL_MEETING_FORM_VALUES;
+    }
+
+    const { year, month, day } = initialData.meetingDateParts;
+
+    return {
+      ...initialData.values,
+      meetingDate: new Date(year, month - 1, day),
+    };
+  });
 
   const [selectedBook, setSelectedBook] = useState<SelectedBook | null>(
     () => initialData?.selectedBook ?? null,

@@ -8,6 +8,7 @@ import {
   deleteMeeting,
   getMeetingById,
 } from "@/features/meetings/api/meetings";
+import { MeetingDetail } from "@/features/meetings/types";
 import {
   applyMeeting,
   getParticipant,
@@ -23,40 +24,6 @@ import {
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-
-export interface MeetingDetail {
-  id: string;
-  host_user_id: string;
-  book_id: string | null;
-  title: string;
-  description: string;
-  thumbnail_url: string | null;
-  meeting_at: string;
-  capacity: number;
-  current_participants: number;
-  status: "recruiting" | "admission_closing" | "closed";
-  address: string | null;
-  detail_address: string | null;
-  region_1depth_name: string;
-  region_2depth_name: string;
-  longitude: number;
-  latitude: number;
-
-  host: {
-    id: string;
-    nickname: string;
-    profile_image_url: string | null;
-    description: string | null;
-  } | null;
-
-  book: {
-    id: string;
-    title: string;
-    author: string;
-    description: string | null;
-    cover_image_url: string | null;
-  } | null;
-}
 
 interface Participant {
   id: string;
@@ -442,9 +409,11 @@ function MeetingDetailPage() {
           alt="Host Profile"
           className="rounded-full overflow-hidden w-40 h-40 m-auto"
         />
-        <p className="text-gray-600 mt-5 max-w-2xl text-center m-auto">
-          {meeting.host?.description}
-        </p>
+        {meeting.host?.description && (
+          <p className="text-gray-600 mt-5 max-w-2xl text-center m-auto">
+            {meeting.host.description}
+          </p>
+        )}
       </div>
       <div className="mt-10 border-t border-gray-100 pt-10">
         <div className="mb-4">

@@ -100,6 +100,7 @@ export async function PATCH(request: Request, context: RouteContext) {
           id,
           host_user_id,
           thumbnail_url,
+          meeting_at,
           current_participants
         `,
       )
@@ -180,11 +181,18 @@ export async function PATCH(request: Request, context: RouteContext) {
     }
 
     const meetingDate = new Date(meetingAt);
+    const meetingAtTimestamp = meetingDate.getTime();
+    const existingMeetingAtTimestamp = new Date(
+      existingMeeting.meeting_at,
+    ).getTime();
+    const isUnchangedMeetingAt =
+      !Number.isNaN(existingMeetingAtTimestamp) &&
+      meetingAtTimestamp === existingMeetingAtTimestamp;
 
     if (
       !meetingAt ||
-      Number.isNaN(meetingDate.getTime()) ||
-      meetingDate.getTime() <= Date.now()
+      Number.isNaN(meetingAtTimestamp) ||
+      (!isUnchangedMeetingAt && meetingAtTimestamp <= Date.now())
     ) {
       return NextResponse.json(
         { message: "모임 날짜와 시간을 확인해주세요." },
@@ -388,8 +396,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
       return NextResponse.json(
         {
-          message:
-            "참여 인원이 변경되어 모집 인원을 수정할 수 없습니다. 새로고침 후 다시 시도해주세요.",
+          message: "모임 정보가 변경되었습니다. 새로고침 후 다시 시도해주세요.",
         },
         { status: 409 },
       );
