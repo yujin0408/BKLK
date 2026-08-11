@@ -26,6 +26,8 @@ import { useEffect, useRef, useState } from "react";
 
 export interface MeetingDetail {
   id: string;
+  host_user_id: string;
+  book_id: string | null;
   title: string;
   description: string;
   thumbnail_url: string | null;
@@ -39,7 +41,6 @@ export interface MeetingDetail {
   region_2depth_name: string;
   longitude: number;
   latitude: number;
-  host_user_id: string;
 
   host: {
     id: string;
@@ -401,9 +402,37 @@ function MeetingDetailPage() {
         </div>
       </div>
       <div className="mt-10 border-t border-gray-100 pt-6">
-        <h3 className="text-lg font-bold mb-3">이런 모임이에요!</h3>
-        <p>{meeting.description}</p>
+        <h3 className="mb-3 text-lg font-bold">이런 모임이에요!</h3>
+        <p className="text-md whitespace-pre-wrap">{meeting.description}</p>
       </div>
+
+      {meeting.book && (
+        <div className="mt-10 border-t border-gray-100 pt-6">
+          <h3 className="mb-4 text-lg font-bold">이 책을 함께 읽어요</h3>
+
+          <div className="flex items-start gap-5 rounded-lg bg-gray-50 p-5">
+            <img
+              src={meeting.book.cover_image_url || "/book-placeholder.png"}
+              alt={`${meeting.book.title} 표지`}
+              className="h-36 w-24 shrink-0 rounded object-cover shadow-sm"
+            />
+
+            <div className="min-w-0">
+              <p className="text-lg font-semibold">{meeting.book.title}</p>
+
+              <p className="mt-1 text-sm text-gray-600">
+                {meeting.book.author}
+              </p>
+
+              {meeting.book.description && (
+                <p className="mt-4 text-sm leading-5 text-gray-700 ">
+                  {meeting.book.description}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       <div className="mt-10 border-t border-gray-100 pt-10 text-center">
         <h3 className="text-lg font-bold mb-6">
           {meeting.host?.nickname}님이 개설한 모임입니다
@@ -413,19 +442,35 @@ function MeetingDetailPage() {
           alt="Host Profile"
           className="rounded-full overflow-hidden w-40 h-40 m-auto"
         />
-        <p className="text-gray-600 mt-5 max-w-2xl">
+        <p className="text-gray-600 mt-5 max-w-2xl text-center m-auto">
           {meeting.host?.description}
         </p>
       </div>
-      <div>
-        <div className="mt-10 flex gap-12 pt-10">
+      <div className="mt-10 border-t border-gray-100 pt-10">
+        <div className="mb-4">
+          <h3 className="mb-2 text-lg font-bold">모임 장소</h3>
+
+          <div className="flex items-start gap-2 text-sm text-gray-600">
+            <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
+
+            <p>
+              {meeting.address}
+              {meeting.detail_address && (
+                <span className="ml-1">{meeting.detail_address}</span>
+              )}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex gap-12">
           <KakaoMap
             latitude={Number(meeting.latitude)}
             longitude={Number(meeting.longitude)}
           />
           <MeetingCalendar meetingAt={meeting.meeting_at} />
         </div>
-        <div className="mt-10 flex justify-center gap-3 max-w-lg m-auto">
+
+        <div className="mt-10 flex max-w-lg justify-center gap-3 m-auto">
           <Button
             variant="solid"
             onClick={handleApply}
