@@ -33,6 +33,8 @@ interface ValidateMeetingFormParams {
   values: MeetingFormValues;
   selectedBook: SelectedBook | null;
   thumbnailFile: File | null;
+  minimumCapacity?: number;
+  originalMeetingAt?: string;
 }
 
 const MAX_THUMBNAIL_SIZE = 5 * 1024 * 1024;
@@ -43,6 +45,8 @@ export default function validateMeetingForm({
   values,
   selectedBook,
   thumbnailFile,
+  minimumCapacity,
+  originalMeetingAt,
 }: ValidateMeetingFormParams): MeetingFormErrors {
   const errors: MeetingFormErrors = {};
 
@@ -87,7 +91,15 @@ export default function validateMeetingForm({
 
       const meetingAtTimestamp = new Date(meetingAtIso).getTime();
 
-      if (meetingAtTimestamp <= Date.now()) {
+      const originalMeetingAtTimestamp = originalMeetingAt
+        ? new Date(originalMeetingAt).getTime()
+        : null;
+      const isUnchangedMeetingAt =
+        originalMeetingAtTimestamp !== null &&
+        !Number.isNaN(originalMeetingAtTimestamp) &&
+        meetingAtTimestamp === originalMeetingAtTimestamp;
+
+      if (!isUnchangedMeetingAt && meetingAtTimestamp <= Date.now()) {
         errors.meetingDate = "모임 날짜와 시간은 현재 이후여야 합니다.";
       }
     } catch {
@@ -105,6 +117,8 @@ export default function validateMeetingForm({
     errors.capacity = `모집 인원은 최소 ${MIN_CAPACITY}명입니다.`;
   } else if (capacity > MAX_CAPACITY) {
     errors.capacity = `모집 인원은 최대 ${MAX_CAPACITY}명입니다.`;
+  } else if (minimumCapacity !== undefined && capacity < minimumCapacity) {
+    errors.capacity = `현재 참여 인원인 ${minimumCapacity}명보다 적게 설정할 수 없습니다.`;
   }
 
   if (!values.address.trim()) {

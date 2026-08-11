@@ -6,39 +6,56 @@ import { ChangeEvent, useEffect, useRef, useState } from "react";
 import FormSection from "@/components/layout/FormSection";
 
 interface MeetingThumbnailFieldProps {
+  initialImageUrl?: string | null;
   error?: string;
   onChange: (file: File | null) => void;
+  onRemoveExisting?: () => void;
 }
 
 export default function MeetingThumbnailField({
+  initialImageUrl = null,
   onChange,
+  onRemoveExisting,
   error,
 }: MeetingThumbnailFieldProps) {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialImageUrl);
+
+  const objectUrlRef = useRef<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
+      if (objectUrlRef.current) {
+        URL.revokeObjectURL(objectUrlRef.current);
       }
     };
-  }, [previewUrl]);
+  }, []);
 
   const handleThumbnailChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
     if (!file) return;
 
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+    }
+
     const nextPreviewUrl = URL.createObjectURL(file);
 
+    objectUrlRef.current = nextPreviewUrl;
     setPreviewUrl(nextPreviewUrl);
     onChange(file);
   };
 
   const handleThumbnailRemove = () => {
+    if (objectUrlRef.current) {
+      URL.revokeObjectURL(objectUrlRef.current);
+      objectUrlRef.current = null;
+    }
+
     setPreviewUrl(null);
     onChange(null);
+    onRemoveExisting?.();
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -46,11 +63,11 @@ export default function MeetingThumbnailField({
   };
 
   return (
-    <FormSection label="대표 이미지" htmlFor="meeting-thumbnail">
-      <p className="mb-3 text-sm text-gray-400">
-        이미지를 등록하지 않으면 기본 이미지가 표시됩니다.
-      </p>
-
+    <FormSection
+      label="대표 이미지"
+      description="이미지를 등록하지 않으면 기본 이미지가 표시됩니다."
+      htmlFor="meeting-thumbnail"
+    >
       <div className="flex flex-wrap gap-4">
         <button
           id="meeting-thumbnail"
@@ -64,8 +81,9 @@ export default function MeetingThumbnailField({
           "
         >
           <Camera aria-hidden="true" className="size-6" />
-
-          <span className="text-sm font-medium">이미지 추가</span>
+          <span className="text-sm font-medium">
+            {previewUrl ? "이미지 변경" : "이미지 추가"}
+          </span>
         </button>
 
         <input
@@ -83,7 +101,7 @@ export default function MeetingThumbnailField({
                 src={previewUrl}
                 alt="대표 이미지 미리보기"
                 fill
-                unoptimized
+                unoptimized={previewUrl.startsWith("blob:")}
                 className="object-cover"
               />
             </div>
@@ -103,6 +121,7 @@ export default function MeetingThumbnailField({
           </div>
         )}
       </div>
+
       {error && (
         <p role="alert" className="mt-2 text-sm text-error">
           {error}

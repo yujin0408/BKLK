@@ -8,6 +8,7 @@ import {
   deleteMeeting,
   getMeetingById,
 } from "@/features/meetings/api/meetings";
+import { MeetingDetail } from "@/features/meetings/types";
 import {
   applyMeeting,
   getParticipant,
@@ -23,38 +24,6 @@ import {
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-
-interface MeetingDetail {
-  id: string;
-  title: string;
-  description: string;
-  thumbnail_url: string | null;
-  meeting_at: string;
-  capacity: number;
-  current_participants: number;
-  status: "recruiting" | "admission_closing" | "closed";
-  address: string | null;
-  detail_address: string | null;
-  region_1depth_name: string;
-  region_2depth_name: string;
-  longitude: number;
-  latitude: number;
-
-  host: {
-    id: string;
-    nickname: string;
-    profile_image_url: string | null;
-    description: string | null;
-  } | null;
-
-  book: {
-    id: string;
-    title: string;
-    author: string;
-    description: string | null;
-    cover_image_url: string | null;
-  } | null;
-}
 
 interface Participant {
   id: string;
@@ -258,8 +227,7 @@ function MeetingDetailPage() {
   };
 
   const handleEdit = () => {
-    setIsMenuOpen(false);
-    router.push(`/meetings/${meeting?.id}/edit`);
+    router.push(`/meetings/${id}/edit`);
   };
 
   const handleDelete = async () => {
@@ -401,9 +369,37 @@ function MeetingDetailPage() {
         </div>
       </div>
       <div className="mt-10 border-t border-gray-100 pt-6">
-        <h3 className="text-lg font-bold mb-3">이런 모임이에요!</h3>
-        <p>{meeting.description}</p>
+        <h3 className="mb-3 text-lg font-bold">이런 모임이에요!</h3>
+        <p className="text-md whitespace-pre-wrap">{meeting.description}</p>
       </div>
+
+      {meeting.book && (
+        <div className="mt-10 border-t border-gray-100 pt-6">
+          <h3 className="mb-4 text-lg font-bold">이 책을 함께 읽어요</h3>
+
+          <div className="flex items-start gap-5 rounded-lg bg-gray-50 p-5">
+            <img
+              src={meeting.book.cover_image_url || "/book-placeholder.png"}
+              alt={`${meeting.book.title} 표지`}
+              className="h-36 w-24 shrink-0 rounded object-cover shadow-sm"
+            />
+
+            <div className="min-w-0">
+              <p className="text-lg font-semibold">{meeting.book.title}</p>
+
+              <p className="mt-1 text-sm text-gray-600">
+                {meeting.book.author}
+              </p>
+
+              {meeting.book.description && (
+                <p className="mt-4 text-sm leading-5 text-gray-700 ">
+                  {meeting.book.description}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       <div className="mt-10 border-t border-gray-100 pt-10 text-center">
         <h3 className="text-lg font-bold mb-6">
           {meeting.host?.nickname}님이 개설한 모임입니다
@@ -413,19 +409,42 @@ function MeetingDetailPage() {
           alt="Host Profile"
           className="rounded-full overflow-hidden w-40 h-40 m-auto"
         />
-        <p className="text-gray-600 mt-5 max-w-2xl">
-          {meeting.host?.description}
-        </p>
+        {meeting.host?.description && (
+          <p className="text-gray-600 mt-5 max-w-2xl text-center m-auto">
+            {meeting.host.description}
+          </p>
+        )}
       </div>
-      <div>
-        <div className="mt-10 flex gap-12 pt-10">
-          <KakaoMap
-            latitude={Number(meeting.latitude)}
-            longitude={Number(meeting.longitude)}
-          />
-          <MeetingCalendar meetingAt={meeting.meeting_at} />
+      <div className="mt-10 border-t border-gray-100 pt-10">
+        <div className="mb-4">
+          <h3 className="mb-2 text-lg font-bold">모임 장소</h3>
+
+          <div className="flex items-start gap-2 text-sm text-gray-600">
+            <MapPin className="mt-0.5 h-4 w-4 shrink-0" />
+
+            <p>
+              {meeting.address}
+              {meeting.detail_address && (
+                <span className="ml-1">{meeting.detail_address}</span>
+              )}
+            </p>
+          </div>
         </div>
-        <div className="mt-10 flex justify-center gap-3 max-w-lg m-auto">
+
+        <div className="flex flex-col gap-8 lg:flex-row lg:gap-12">
+          <div className="min-w-0 flex-1">
+            <KakaoMap
+              latitude={Number(meeting.latitude)}
+              longitude={Number(meeting.longitude)}
+            />
+          </div>
+
+          <div className="shrink-0">
+            <MeetingCalendar meetingAt={meeting.meeting_at} />
+          </div>
+        </div>
+
+        <div className="mt-10 flex max-w-lg justify-center gap-3 m-auto">
           <Button
             variant="solid"
             onClick={handleApply}
