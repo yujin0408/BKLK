@@ -1,4 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import {
+  ALADIN_CATEGORY_IDS,
+  type AladinCategorySlug,
+} from "@/features/books/constants";
 import type { AladinBookItem } from "@/features/books/types";
 import { mapAladinBookItem } from "@/features/books/utils/mapAladinBook";
 
@@ -13,7 +17,16 @@ interface AladinBestsellerResponse {
   errorMessage?: string;
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const category = request.nextUrl.searchParams.get("category") ?? "bestseller";
+
+  if (category !== "bestseller" && !isAladinCategorySlug(category)) {
+    return NextResponse.json(
+      { message: "지원하지 않는 도서 카테고리입니다." },
+      { status: 400 },
+    );
+  }
+
   const ttbKey = process.env.ALADIN_TTB_KEY;
 
   if (!ttbKey) {
@@ -33,6 +46,10 @@ export async function GET() {
   url.searchParams.set("Cover", "Big");
   url.searchParams.set("MaxResults", "40");
   url.searchParams.set("Start", "1");
+
+  if (category !== "bestseller") {
+    url.searchParams.set("CategoryId", String(ALADIN_CATEGORY_IDS[category]));
+  }
 
   try {
     const response = await fetch(url.toString(), {
@@ -127,6 +144,10 @@ export async function GET() {
       { status: 502 },
     );
   }
+}
+
+function isAladinCategorySlug(value: string): value is AladinCategorySlug {
+  return value in ALADIN_CATEGORY_IDS;
 }
 
 function isAladinBestsellerResponse(

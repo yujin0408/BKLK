@@ -62,3 +62,9 @@ export interface SelectedBook {
   coverImageUrl: string | null;
   description?: string | null;
 }
+
+export interface BookCategory {
+  id: number;
+  slug: string;
+  name: string;
+}
