@@ -15,10 +15,19 @@ interface AladinSearchResponse {
 
 export async function GET(request: NextRequest) {
   const query = request.nextUrl.searchParams.get("query")?.trim();
+  const startParam = request.nextUrl.searchParams.get("start") ?? "1";
+  const start = Number(startParam);
 
   if (!query) {
     return NextResponse.json(
       { message: "검색어를 입력해 주세요." },
+      { status: 400 },
+    );
+  }
+
+  if (!Number.isSafeInteger(start) || start < 1) {
+    return NextResponse.json(
+      { message: "올바르지 않은 검색 페이지입니다." },
       { status: 400 },
     );
   }
@@ -37,7 +46,7 @@ export async function GET(request: NextRequest) {
     Query: query,
     QueryType: "Keyword",
     MaxResults: "20",
-    Start: "1",
+    Start: String(start),
     SearchTarget: "Book",
     Output: "JS",
     Version: "20131101",
@@ -122,6 +131,14 @@ export async function GET(request: NextRequest) {
       totalResults:
         typeof parsedData.totalResults === "number"
           ? parsedData.totalResults
+          : books.length,
+      startIndex:
+        typeof parsedData.startIndex === "number"
+          ? parsedData.startIndex
+          : start,
+      itemsPerPage:
+        typeof parsedData.itemsPerPage === "number"
+          ? parsedData.itemsPerPage
           : books.length,
     });
   } catch (error) {
