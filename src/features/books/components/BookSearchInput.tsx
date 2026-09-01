@@ -25,12 +25,6 @@ export default function BookSearchInput({
         e.preventDefault();
         onSubmit();
       }}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          onSubmit();
-        }
-      }}
       className="mb-4 flex items-start gap-2"
     >
       <div className="min-w-0 flex-1">
