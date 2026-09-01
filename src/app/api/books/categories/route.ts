@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { ALADIN_CATEGORY_IDS } from "@/features/books/constants";
+import { isAladinCategorySlug } from "@/features/books/constants";
 
 interface CategoryRow {
   id: number;
@@ -30,7 +30,7 @@ export async function GET() {
       ? rows
           .map(toCategoryRow)
           .filter((row): row is CategoryRow => row !== null)
-          .filter((row) => row.slug in ALADIN_CATEGORY_IDS)
+          .filter((row) => isAladinCategorySlug(row.slug))
           .sort((a, b) => a.order - b.order)
           .map(({ id, slug, name }) => ({ id, slug, name }))
       : [];

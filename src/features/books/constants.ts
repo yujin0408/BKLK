@@ -12,3 +12,7 @@ export const ALADIN_CATEGORY_IDS = {
 } as const;
 
 export type AladinCategorySlug = keyof typeof ALADIN_CATEGORY_IDS;
+
+export function isAladinCategorySlug(slug: string): slug is AladinCategorySlug {
+  return Object.prototype.hasOwnProperty.call(ALADIN_CATEGORY_IDS, slug);
+}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   ALADIN_CATEGORY_IDS,
+  isAladinCategorySlug,
   type AladinCategorySlug,
 } from "@/features/books/constants";
 import type { AladinBookItem } from "@/features/books/types";
@@ -144,10 +145,6 @@ export async function GET(request: NextRequest) {
       { status: 502 },
     );
   }
-}
-
-function isAladinCategorySlug(value: string): value is AladinCategorySlug {
-  return value in ALADIN_CATEGORY_IDS;
 }
 
 function isAladinBestsellerResponse(
