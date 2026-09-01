@@ -1,5 +1,8 @@
-import type { CreateBookInput } from "@/features/books/types";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import type {
+  BookCategorySource,
+  CreateBookInput,
+} from "@/features/books/types";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 
 interface CreateBookRequest {
@@ -12,10 +15,13 @@ const ISBN13_MAX_LENGTH = 13;
 const DESCRIPTION_MAX_LENGTH = 10_000;
 const COVER_URL_MAX_LENGTH = 2_000;
 const CATEGORY_NAME_MAX_LENGTH = 500;
+const PUBLISHER_MAX_LENGTH = 500;
 
-const BOOK_CATEGORY_SOURCES = ["aladin", "manual", "unclassified"] as const;
-
-type BookCategorySource = (typeof BOOK_CATEGORY_SOURCES)[number];
+const BOOK_CATEGORY_SOURCES = [
+  "manual",
+  "mapped",
+  "unclassified",
+] as const satisfies readonly BookCategorySource[];
 
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -38,25 +44,17 @@ export async function POST(request: NextRequest) {
     }
 
     const { book } = body;
-    const supabase = await createServerSupabaseClient();
+    const supabase = createAdminSupabaseClient();
 
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { message: "로그인이 필요합니다." },
-        { status: 401 },
-      );
-    }
-
-    const { data: existing, error: findError } = await supabase
+    const normalizedIsbn13 = normalizeNullableString(book.isbn13);
+    const existingBookQuery = supabase
       .from("books")
-      .select("id, title, author, cover_image_url")
-      .eq("aladin_item_id", book.aladinItemId)
-      .maybeSingle();
+      .select("id, title, author, cover_image_url");
+    const { data: existing, error: findError } = normalizedIsbn13
+      ? await existingBookQuery.eq("isbn13", normalizedIsbn13).maybeSingle()
+      : await existingBookQuery
+          .eq("aladin_item_id", book.aladinItemId)
+          .maybeSingle();
 
     if (findError) {
       console.error("books find error", findError);
@@ -78,13 +76,15 @@ export async function POST(request: NextRequest) {
       .from("books")
       .insert({
         aladin_item_id: book.aladinItemId,
-        isbn13: normalizeNullableString(book.isbn13),
+        isbn13: normalizedIsbn13,
         title: book.title.trim(),
         author: book.author.trim(),
         description: normalizeNullableString(book.description),
         cover_image_url: normalizeNullableString(book.coverImageUrl),
         aladin_category_id: book.aladinCategoryId ?? null,
         aladin_category_name: normalizeNullableString(book.aladinCategoryName),
+        publisher: normalizeNullableString(book.publisher),
+        pub_date: normalizeNullableString(book.pubDate),
         category_id: book.categoryId ?? null,
         category_source: book.categorySource ?? "unclassified",
       })
@@ -93,11 +93,16 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       if (insertError.code === "23505") {
-        const { data: existingAgain, error: findAgainError } = await supabase
+        const existingAgainQuery = supabase
           .from("books")
-          .select("id, title, author, cover_image_url")
-          .eq("aladin_item_id", book.aladinItemId)
-          .maybeSingle();
+          .select("id, title, author, cover_image_url");
+        const { data: existingAgain, error: findAgainError } = normalizedIsbn13
+          ? await existingAgainQuery
+              .eq("isbn13", normalizedIsbn13)
+              .maybeSingle()
+          : await existingAgainQuery
+              .eq("aladin_item_id", book.aladinItemId)
+              .maybeSingle();
 
         if (!findAgainError && existingAgain) {
           return NextResponse.json({
@@ -152,9 +157,25 @@ function isCreateBookRequest(value: unknown): value is CreateBookRequest {
     isNullableHttpUrl(book.coverImageUrl, COVER_URL_MAX_LENGTH) &&
     isNullablePositiveSafeInteger(book.aladinCategoryId) &&
     isNullableString(book.aladinCategoryName, CATEGORY_NAME_MAX_LENGTH) &&
+    isNullableString(book.publisher, PUBLISHER_MAX_LENGTH) &&
+    isNullableDateString(book.pubDate) &&
     isNullablePositiveSafeInteger(book.categoryId) &&
     isNullableCategorySource(book.categorySource)
   );
+}
+
+function isNullableDateString(
+  value: unknown,
+): value is string | null | undefined {
+  if (value === undefined || value === null || value === "") {
+    return true;
+  }
+
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+
+  return !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

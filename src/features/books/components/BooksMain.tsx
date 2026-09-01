@@ -1,16 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import BookSearchInput from "@/features/books/components/BookSearchInput";
 import BookCategoryTabs from "@/features/books/components/BookCategoryTabs";
 import BestsellerBookList from "@/features/books/components/BestsellerBookList";
 import { useBookCategories } from "@/features/books/hooks/useBookCategories";
 import { useInfiniteBookSearch } from "@/features/books/hooks/useInfiniteBookSearch";
 import { useBestsellers } from "@/features/books/hooks/useBestsellers";
+import { useSaveBook } from "@/features/books/hooks/useSaveBook";
+import type { BookSearchResult } from "@/features/books/types";
+import { toCreateBookInput } from "@/features/books/utils/mapAladinBook";
 
 const BESTSELLER_PAGE_SIZE = 9;
 
 export default function BooksMain() {
+  const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState("bestseller");
   const [visibleCount, setVisibleCount] = useState(BESTSELLER_PAGE_SIZE);
   const [searchInput, setSearchInput] = useState("");
@@ -18,6 +23,9 @@ export default function BooksMain() {
   const categories = useBookCategories();
   const bestsellers = useBestsellers(selectedCategory);
   const search = useInfiniteBookSearch(submittedKeyword);
+  const saveBook = useSaveBook();
+  const [pendingBookId, setPendingBookId] = useState<number>();
+  const isSavingBookRef = useRef(false);
   const isSearching = Boolean(submittedKeyword);
   const searchBooks = useMemo(() => {
     const books = search.data?.pages.flatMap((page) => page.books) ?? [];
@@ -77,6 +85,30 @@ export default function BooksMain() {
     }
 
     setVisibleCount(nextVisibleCount);
+  };
+
+  const handleBookSelect = async (book: BookSearchResult) => {
+    if (isSavingBookRef.current) {
+      return;
+    }
+
+    isSavingBookRef.current = true;
+    setPendingBookId(book.aladinItemId);
+
+    try {
+      const savedBook = await saveBook.mutateAsync(toCreateBookInput(book));
+
+      router.push(`/books/${savedBook.id}`);
+    } catch (error) {
+      isSavingBookRef.current = false;
+      setPendingBookId(undefined);
+      console.error("도서 저장 실패:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "도서 저장 중 오류가 발생했습니다.",
+      );
+    }
   };
 
   return (
@@ -203,7 +235,12 @@ export default function BooksMain() {
           )}
 
         {books.length > 0 && (
-          <BestsellerBookList books={books} visibleCount={visibleCount} />
+          <BestsellerBookList
+            books={books}
+            visibleCount={visibleCount}
+            onSelect={handleBookSelect}
+            pendingBookId={pendingBookId}
+          />
         )}
 
         {(visibleCount < books.length ||

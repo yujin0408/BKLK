@@ -50,6 +50,8 @@ export interface CreateBookInput {
   coverImageUrl: string | null;
   aladinCategoryId: number | null;
   aladinCategoryName: string | null;
+  publisher: string | null;
+  pubDate: string | null;
   categoryId: number | null;
   categorySource: BookCategorySource;
 }
@@ -74,4 +76,15 @@ export interface BookCategory {
   id: number;
   slug: string;
   name: string;
+}
+
+export interface BookDetail {
+  id: string;
+  title: string;
+  author: string;
+  description: string | null;
+  coverImageUrl: string | null;
+  aladinCategoryName: string | null;
+  publisher: string | null;
+  pubDate: string | null;
 }
