@@ -18,6 +18,16 @@ interface AladinLookupResponse {
 }
 
 const ALADIN_LOOKUP_URL = "https://www.aladin.co.kr/ttb/api/ItemLookUp.aspx";
+const LOOKUP_RATE_LIMIT = 30;
+const LOOKUP_RATE_WINDOW_MS = 60_000;
+const MAX_TRACKED_CLIENTS = 10_000;
+
+interface RateLimitEntry {
+  count: number;
+  resetAt: number;
+}
+
+const lookupRateLimits = new Map<string, RateLimitEntry>();
 
 const TITLE_MAX_LENGTH = 500;
 const AUTHOR_MAX_LENGTH = 500;
@@ -76,6 +86,20 @@ export async function POST(request: NextRequest) {
         book: existingByItemId,
         created: false,
       });
+    }
+
+    const rateLimit = consumeLookupRateLimit(getClientIdentifier(request));
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { message: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요." },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(rateLimit.retryAfterSeconds),
+          },
+        },
+      );
     }
 
     const book = await getTrustedAladinBook(requestedBook.aladinItemId);
@@ -284,6 +308,61 @@ function isAladinBookItem(value: unknown): value is AladinBookItem {
     typeof value.title === "string" &&
     typeof value.author === "string"
   );
+}
+
+function getClientIdentifier(request: NextRequest): string {
+  const vercelForwardedFor = request.headers
+    .get("x-vercel-forwarded-for")
+    ?.trim();
+
+  if (vercelForwardedFor) {
+    return vercelForwardedFor;
+  }
+
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  const forwardedAddress = forwardedFor?.split(",")[0]?.trim();
+
+  return forwardedAddress || "unknown";
+}
+
+function consumeLookupRateLimit(clientId: string): {
+  allowed: boolean;
+  retryAfterSeconds: number;
+} {
+  const now = Date.now();
+  const current = lookupRateLimits.get(clientId);
+
+  if (!current || current.resetAt <= now) {
+    if (current) {
+      lookupRateLimits.delete(clientId);
+    }
+
+    if (lookupRateLimits.size >= MAX_TRACKED_CLIENTS) {
+      const oldestClientId = lookupRateLimits.keys().next().value;
+
+      if (typeof oldestClientId === "string") {
+        lookupRateLimits.delete(oldestClientId);
+      }
+    }
+
+    lookupRateLimits.set(clientId, {
+      count: 1,
+      resetAt: now + LOOKUP_RATE_WINDOW_MS,
+    });
+
+    return { allowed: true, retryAfterSeconds: 0 };
+  }
+
+  if (current.count >= LOOKUP_RATE_LIMIT) {
+    return {
+      allowed: false,
+      retryAfterSeconds: Math.max(1, Math.ceil((current.resetAt - now) / 1_000)),
+    };
+  }
+
+  current.count += 1;
+
+  return { allowed: true, retryAfterSeconds: 0 };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
