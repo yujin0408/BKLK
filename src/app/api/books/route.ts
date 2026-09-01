@@ -89,11 +89,22 @@ export async function POST(request: NextRequest) {
     }
 
     const clientIdentifier = getClientIdentifier(request);
-    const rateLimit = clientIdentifier
-      ? consumeLookupRateLimit(clientIdentifier)
-      : null;
 
-    if (rateLimit && !rateLimit.allowed) {
+    if (!clientIdentifier) {
+      return NextResponse.json(
+        { message: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요." },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(LOOKUP_RATE_WINDOW_MS / 1_000),
+          },
+        },
+      );
+    }
+
+    const rateLimit = consumeLookupRateLimit(clientIdentifier);
+
+    if (!rateLimit.allowed) {
       return NextResponse.json(
         { message: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요." },
         {
