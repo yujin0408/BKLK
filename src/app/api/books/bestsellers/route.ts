@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
   url.searchParams.set("Output", "JS");
   url.searchParams.set("Version", "20131101");
   url.searchParams.set("Cover", "Big");
-  url.searchParams.set("MaxResults", "40");
+  url.searchParams.set("MaxResults", "50");
   url.searchParams.set("Start", "1");
 
   if (category !== "bestseller") {

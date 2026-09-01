@@ -7,8 +7,11 @@ import BestsellerBookList from "@/features/books/components/BestsellerBookList";
 import { useBookCategories } from "@/features/books/hooks/useBookCategories";
 import { useBestsellers } from "@/features/books/hooks/useBestsellers";
 
+const BESTSELLER_PAGE_SIZE = 9;
+
 export default function BooksMain() {
   const [selectedCategory, setSelectedCategory] = useState("bestseller");
+  const [visibleCount, setVisibleCount] = useState(BESTSELLER_PAGE_SIZE);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [searchNotice, setSearchNotice] = useState("");
   const categories = useBookCategories();
@@ -18,6 +21,11 @@ export default function BooksMain() {
       ? "전체"
       : (categories.data?.find(({ slug }) => slug === selectedCategory)?.name ??
         "선택한 카테고리");
+
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category);
+    setVisibleCount(BESTSELLER_PAGE_SIZE);
+  };
 
   return (
     <div className="mx-auto w-full max-w-300 px-5 pb-10 pt-8 sm:px-8">
@@ -77,7 +85,7 @@ export default function BooksMain() {
             <BookCategoryTabs
               categories={categories.data ?? []}
               selectedSlug={selectedCategory}
-              onSelect={setSelectedCategory}
+              onSelect={handleCategorySelect}
             />
           )}
         </div>
@@ -143,13 +151,24 @@ export default function BooksMain() {
           )}
 
         {bestsellers.data && bestsellers.data.length > 0 && (
-          <BestsellerBookList books={bestsellers.data} />
+          <BestsellerBookList
+            books={bestsellers.data}
+            visibleCount={visibleCount}
+          />
         )}
 
-        {bestsellers.data && bestsellers.data.length > 9 && (
+        {bestsellers.data && visibleCount < bestsellers.data.length && (
           <div className="mt-10 flex justify-center">
             <button
               type="button"
+              onClick={() =>
+                setVisibleCount((count) =>
+                  Math.min(
+                    count + BESTSELLER_PAGE_SIZE,
+                    bestsellers.data.length,
+                  ),
+                )
+              }
               className="rounded-md border border-brand-primary bg-white px-10 py-3 text-sm font-semibold text-brand-primary transition-colors hover:bg-bg-blue"
             >
               MORE
