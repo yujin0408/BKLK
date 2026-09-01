@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   ALADIN_CATEGORY_IDS,
   isAladinCategorySlug,
-  type AladinCategorySlug,
 } from "@/features/books/constants";
 import type { AladinBookItem } from "@/features/books/types";
 import { mapAladinBookItem } from "@/features/books/utils/mapAladinBook";

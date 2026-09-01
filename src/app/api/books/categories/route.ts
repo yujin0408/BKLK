@@ -6,7 +6,6 @@ interface CategoryRow {
   id: number;
   slug: string;
   name: string;
-  order: number;
 }
 
 export async function GET() {
@@ -31,8 +30,6 @@ export async function GET() {
           .map(toCategoryRow)
           .filter((row): row is CategoryRow => row !== null)
           .filter((row) => isAladinCategorySlug(row.slug))
-          .sort((a, b) => a.order - b.order)
-          .map(({ id, slug, name }) => ({ id, slug, name }))
       : [];
 
     return NextResponse.json(
@@ -52,14 +49,13 @@ export async function GET() {
   }
 }
 
-function toCategoryRow(value: unknown, index: number): CategoryRow | null {
+function toCategoryRow(value: unknown): CategoryRow | null {
   if (typeof value !== "object" || value === null) return null;
 
   const row = value as Record<string, unknown>;
   const id = row.id;
-  const slug = row.slug ?? row.code;
-  const name = row.name ?? row.label ?? row.display_name;
-  const order = row.display_order ?? row.sort_order ?? index;
+  const slug = row.slug;
+  const name = row.name;
 
   if (
     typeof id !== "number" ||
@@ -73,6 +69,5 @@ function toCategoryRow(value: unknown, index: number): CategoryRow | null {
     id,
     slug,
     name,
-    order: typeof order === "number" ? order : index,
   };
 }

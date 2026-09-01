@@ -88,9 +88,12 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const rateLimit = consumeLookupRateLimit(getClientIdentifier(request));
+    const clientIdentifier = getClientIdentifier(request);
+    const rateLimit = clientIdentifier
+      ? consumeLookupRateLimit(clientIdentifier)
+      : null;
 
-    if (!rateLimit.allowed) {
+    if (rateLimit && !rateLimit.allowed) {
       return NextResponse.json(
         { message: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요." },
         {
@@ -310,7 +313,7 @@ function isAladinBookItem(value: unknown): value is AladinBookItem {
   );
 }
 
-function getClientIdentifier(request: NextRequest): string {
+function getClientIdentifier(request: NextRequest): string | null {
   const vercelForwardedFor = request.headers
     .get("x-vercel-forwarded-for")
     ?.trim();
@@ -322,7 +325,7 @@ function getClientIdentifier(request: NextRequest): string {
   const forwardedFor = request.headers.get("x-forwarded-for");
   const forwardedAddress = forwardedFor?.split(",")[0]?.trim();
 
-  return forwardedAddress || "unknown";
+  return forwardedAddress || null;
 }
 
 function consumeLookupRateLimit(clientId: string): {
