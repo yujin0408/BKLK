@@ -1,13 +1,23 @@
 import type {
+  AladinBookItem,
   BookCategorySource,
   CreateBookInput,
 } from "@/features/books/types";
+import { mapAladinBookItem } from "@/features/books/utils/mapAladinBook";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { NextRequest, NextResponse } from "next/server";
 
 interface CreateBookRequest {
   book: CreateBookInput;
 }
+
+interface AladinLookupResponse {
+  item?: unknown;
+  errorCode?: number | string;
+  errorMessage?: string;
+}
+
+const ALADIN_LOOKUP_URL = "https://www.aladin.co.kr/ttb/api/ItemLookUp.aspx";
 
 const TITLE_MAX_LENGTH = 500;
 const AUTHOR_MAX_LENGTH = 500;
@@ -43,21 +53,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { book } = body;
+    const { book: requestedBook } = body;
     const supabase = createAdminSupabaseClient();
 
-    const normalizedIsbn13 = normalizeNullableString(book.isbn13);
-    const existingBookQuery = supabase
+    const { data: existingByItemId, error: itemIdFindError } = await supabase
       .from("books")
-      .select("id, title, author, cover_image_url");
-    const { data: existing, error: findError } = normalizedIsbn13
-      ? await existingBookQuery.eq("isbn13", normalizedIsbn13).maybeSingle()
-      : await existingBookQuery
-          .eq("aladin_item_id", book.aladinItemId)
-          .maybeSingle();
+      .select("id, title, author, cover_image_url")
+      .eq("aladin_item_id", requestedBook.aladinItemId)
+      .maybeSingle();
 
-    if (findError) {
-      console.error("books find error", findError);
+    if (itemIdFindError) {
+      console.error("books find error", itemIdFindError);
 
       return NextResponse.json(
         { message: "도서 조회에 실패했습니다." },
@@ -65,12 +71,51 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (existing) {
+    if (existingByItemId) {
       return NextResponse.json({
-        book: existing,
+        book: existingByItemId,
         created: false,
       });
     }
+
+    const book = await getTrustedAladinBook(requestedBook.aladinItemId);
+
+    if (!book) {
+      return NextResponse.json(
+        { message: "알라딘 도서 정보를 확인하지 못했습니다." },
+        { status: 502 },
+      );
+    }
+
+    const normalizedIsbn13 = normalizeNullableString(book.isbn13);
+
+    if (normalizedIsbn13) {
+      const { data: existingByIsbn, error: isbnFindError } = await supabase
+        .from("books")
+        .select("id, title, author, cover_image_url")
+        .eq("isbn13", normalizedIsbn13)
+        .maybeSingle();
+
+      if (isbnFindError) {
+        console.error("books find error", isbnFindError);
+
+        return NextResponse.json(
+          { message: "도서 조회에 실패했습니다." },
+          { status: 500 },
+        );
+      }
+
+      if (existingByIsbn) {
+        return NextResponse.json({
+          book: existingByIsbn,
+          created: false,
+        });
+      }
+    }
+
+    const normalizedPubDate = isNullableDateString(book.pubDate)
+      ? normalizeNullableString(book.pubDate)
+      : null;
 
     const { data: created, error: insertError } = await supabase
       .from("books")
@@ -84,9 +129,9 @@ export async function POST(request: NextRequest) {
         aladin_category_id: book.aladinCategoryId ?? null,
         aladin_category_name: normalizeNullableString(book.aladinCategoryName),
         publisher: normalizeNullableString(book.publisher),
-        pub_date: normalizeNullableString(book.pubDate),
-        category_id: book.categoryId ?? null,
-        category_source: book.categorySource ?? "unclassified",
+        pub_date: normalizedPubDate,
+        category_id: null,
+        category_source: "unclassified",
       })
       .select("id, title, author, cover_image_url")
       .single();
@@ -175,7 +220,70 @@ function isNullableDateString(
     return false;
   }
 
-  return !Number.isNaN(Date.parse(`${value}T00:00:00Z`));
+  const parsedDate = new Date(`${value}T00:00:00Z`);
+
+  return (
+    !Number.isNaN(parsedDate.getTime()) &&
+    parsedDate.toISOString().slice(0, 10) === value
+  );
+}
+
+async function getTrustedAladinBook(itemId: number) {
+  const ttbKey = process.env.ALADIN_TTB_KEY;
+
+  if (!ttbKey) {
+    console.error("ALADIN_TTB_KEY is not configured");
+    return null;
+  }
+
+  const url = new URL(ALADIN_LOOKUP_URL);
+  url.searchParams.set("TTBKey", ttbKey);
+  url.searchParams.set("ItemIdType", "ItemId");
+  url.searchParams.set("ItemId", String(itemId));
+  url.searchParams.set("Output", "JS");
+  url.searchParams.set("Version", "20131101");
+  url.searchParams.set("Cover", "Big");
+
+  try {
+    const response = await fetch(url, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: 86_400 },
+    });
+    const data: unknown = await response.json();
+
+    if (!response.ok || !isAladinLookupResponse(data)) {
+      console.error("Aladin lookup error", { status: response.status });
+      return null;
+    }
+
+    const item = Array.isArray(data.item)
+      ? data.item.find(isAladinBookItem)
+      : null;
+
+    if (!item) {
+      return null;
+    }
+
+    const mappedBook = mapAladinBookItem(item);
+
+    return mappedBook.aladinItemId === itemId ? mappedBook : null;
+  } catch (error) {
+    console.error("Aladin lookup handler error", error);
+    return null;
+  }
+}
+
+function isAladinLookupResponse(value: unknown): value is AladinLookupResponse {
+  return isRecord(value) && !("errorCode" in value);
+}
+
+function isAladinBookItem(value: unknown): value is AladinBookItem {
+  return (
+    isRecord(value) &&
+    typeof value.itemId === "number" &&
+    typeof value.title === "string" &&
+    typeof value.author === "string"
+  );
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
