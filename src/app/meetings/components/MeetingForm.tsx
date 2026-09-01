@@ -19,6 +19,7 @@ import toMeetingAtIso from "@/features/meetings/utils/toMeetingAtIso";
 import createMeeting from "@/features/meetings/api/createMeeting";
 import updateMeeting from "@/features/meetings/api/updateMeeting";
 import { MeetingFormInitialData } from "@/features/meetings/types";
+import type { SelectedBook } from "@/features/books/types";
 
 const MEETING_FORM_FIELDS = [
   "book",
@@ -41,16 +42,19 @@ type MeetingFormProps =
       mode?: "create";
       meetingId?: never;
       initialData?: never;
+      initialBook?: SelectedBook | null;
     }
   | {
       mode: "edit";
       meetingId: string;
       initialData: MeetingFormInitialData;
+      initialBook?: never;
     };
 
 export default function MeetingForm(props: MeetingFormProps) {
   const mode = props.mode ?? "create";
   const initialData = mode === "edit" ? props.initialData : undefined;
+  const initialBook = mode === "create" ? props.initialBook : undefined;
 
   const router = useRouter();
 
@@ -62,7 +66,7 @@ export default function MeetingForm(props: MeetingFormProps) {
     setSelectedBook,
     setThumbnailFile,
     selectLocation,
-  } = useMeetingForm(initialData);
+  } = useMeetingForm(initialData, initialBook);
 
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
