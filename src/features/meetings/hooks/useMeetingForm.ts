@@ -7,7 +7,10 @@ import {
 } from "../types";
 import { SelectedBook } from "@/features/books/types";
 
-export default function useMeetingForm(initialData?: MeetingFormInitialData) {
+export default function useMeetingForm(
+  initialData?: MeetingFormInitialData,
+  initialBook?: SelectedBook | null,
+) {
   const [values, setValues] = useState<MeetingFormValues>(() => {
     if (!initialData) {
       return INITIAL_MEETING_FORM_VALUES;
@@ -22,7 +25,7 @@ export default function useMeetingForm(initialData?: MeetingFormInitialData) {
   });
 
   const [selectedBook, setSelectedBook] = useState<SelectedBook | null>(
-    () => initialData?.selectedBook ?? null,
+    () => initialData?.selectedBook ?? initialBook ?? null,
   );
 
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);

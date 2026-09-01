@@ -30,7 +30,7 @@ function normalizeNumber(value?: number | string | null): number | null {
 export function mapAladinBookItem(item: AladinBookItem): BookSearchResult {
   return {
     aladinItemId: normalizeNumber(item.itemId) ?? 0,
-    isbn13: normalizeString(item.isbn13 ?? item.isbn),
+    isbn13: normalizeString(item.isbn13),
     title: normalizeString(item.title) ?? "제목 없음",
     author: normalizeString(item.author) ?? "알 수 없음",
     description: normalizeString(item.description),
@@ -59,6 +59,8 @@ export function toCreateBookInput(
     coverImageUrl: book.coverImageUrl,
     aladinCategoryId: book.aladinCategoryId,
     aladinCategoryName: book.aladinCategoryName,
+    publisher: book.publisher,
+    pubDate: book.pubDate,
     categoryId: overrides?.categoryId ?? null,
     categorySource: overrides?.categorySource ?? "unclassified",
   };
