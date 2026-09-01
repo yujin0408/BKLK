@@ -1,5 +1,6 @@
 import type {
   BookSearchResult,
+  BookSearchPage,
   BookCategory,
   CreateBookInput,
   SelectedBook,
@@ -56,8 +57,18 @@ export async function getBookCategories(): Promise<BookCategory[]> {
 }
 
 export async function searchBooks(query: string): Promise<BookSearchResult[]> {
+  const data = await searchBookPage(query);
+
+  return data.books;
+}
+
+export async function searchBookPage(
+  query: string,
+  start = 1,
+): Promise<BookSearchPage> {
+  const params = new URLSearchParams({ query, start: String(start) });
   const response = await fetch(
-    `/api/books/search?query=${encodeURIComponent(query)}`,
+    `/api/books/search?${params.toString()}`,
   );
 
   if (!response.ok) {
@@ -66,11 +77,11 @@ export async function searchBooks(query: string): Promise<BookSearchResult[]> {
 
   const data: unknown = await response.json();
 
-  if (!isBookListResponse(data)) {
+  if (!isBookSearchPageResponse(data)) {
     throw new Error("도서 검색 응답 형식이 올바르지 않습니다.");
   }
 
-  return data.books;
+  return data;
 }
 
 export async function saveBook(input: CreateBookInput): Promise<SelectedBook> {
@@ -111,6 +122,18 @@ function isBookListResponse(value: unknown): value is BookListResponse {
     value !== null &&
     "books" in value &&
     Array.isArray(value.books)
+  );
+}
+
+function isBookSearchPageResponse(value: unknown): value is BookSearchPage {
+  return (
+    isBookListResponse(value) &&
+    "totalResults" in value &&
+    typeof value.totalResults === "number" &&
+    "startIndex" in value &&
+    typeof value.startIndex === "number" &&
+    "itemsPerPage" in value &&
+    typeof value.itemsPerPage === "number"
   );
 }
 

@@ -63,6 +63,13 @@ export interface SelectedBook {
   description?: string | null;
 }
 
+export interface BookSearchPage {
+  books: BookSearchResult[];
+  totalResults: number;
+  startIndex: number;
+  itemsPerPage: number;
+}
+
 export interface BookCategory {
   id: number;
   slug: string;
