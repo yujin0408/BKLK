@@ -3,6 +3,7 @@ import ProfileEditor from "@/features/mypage/components/ProfileEditor";
 import LibrarySummary from "@/features/mypage/components/LibrarySummary";
 import { getMyPageData } from "@/features/mypage/api/mypage.server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import Link from "next/link";
 
 export const metadata = {
   title: "마이페이지 | BookLink",
@@ -25,16 +26,19 @@ export default async function MyPage() {
       <ProfileEditor initialProfile={data.profile} />
 
       <section aria-labelledby="meetings-heading" className="rounded-2xl border border-line-200 bg-white p-6 sm:p-8">
-        <h2 id="meetings-heading" className="text-2xl font-bold text-black-800">모임 내역</h2>
+        <div className="flex items-center justify-between">
+          <h2 id="meetings-heading" className="text-2xl font-bold text-black-800">모임 내역</h2>
+          <Link href="/mypage/meetings" className="text-sm font-semibold text-brand-primary hover:underline">전체보기</Link>
+        </div>
         <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-5">
-          <div className="flex items-center justify-between rounded-xl border border-line-200 px-4 py-5 sm:px-7">
+          <Link href="/mypage/meetings?tab=applied" className="flex items-center justify-between rounded-xl border border-line-200 px-4 py-5 transition hover:shadow-sm sm:px-7">
             <span className="font-semibold text-black-600">신청 모임</span>
             <strong className="text-2xl text-brand-primary">{data.meetingCounts.applied}</strong>
-          </div>
-          <div className="flex items-center justify-between rounded-xl border border-line-200 px-4 py-5 sm:px-7">
+          </Link>
+          <Link href="/mypage/meetings?tab=created" className="flex items-center justify-between rounded-xl border border-line-200 px-4 py-5 transition hover:shadow-sm sm:px-7">
             <span className="font-semibold text-black-600">개설 모임</span>
             <strong className="text-2xl text-brand-primary">{data.meetingCounts.hosted}</strong>
-          </div>
+          </Link>
         </div>
       </section>
 
