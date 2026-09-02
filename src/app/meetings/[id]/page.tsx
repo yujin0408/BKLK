@@ -73,7 +73,9 @@ function MeetingDetailPage() {
     : false;
 
   const hasDisabledStatus =
-    participant?.status === "pending" || participant?.status === "approved";
+    participant?.status === "pending" ||
+    participant?.status === "approved" ||
+    participant?.status === "rejected";
 
   useEffect(() => {
     if (!id) return;
@@ -140,7 +142,8 @@ function MeetingDetailPage() {
 
     if (
       participant?.status === "pending" ||
-      participant?.status === "approved"
+      participant?.status === "approved" ||
+      participant?.status === "rejected"
     ) {
       return;
     }
@@ -153,7 +156,11 @@ function MeetingDetailPage() {
       setParticipant(data);
     } catch (error) {
       console.error("모임 신청 실패:", error);
-      alert("모임 신청 중 오류가 발생했습니다.");
+      alert(
+        error instanceof Error
+          ? error.message
+          : "모임 신청 중 오류가 발생했습니다.",
+      );
     } finally {
       setIsApplying(false);
     }
@@ -193,7 +200,7 @@ function MeetingDetailPage() {
         return "참가 중인 모임이에요";
 
       case "rejected":
-        return "다시 신청하기";
+        return "참가 신청이 거절되었어요";
 
       case "cancelled":
       default:
