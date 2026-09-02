@@ -27,8 +27,12 @@ function getOwnedStoragePath(url: string | null, userId: string): string | null 
   const markerIndex = url.indexOf(marker);
   if (markerIndex < 0) return null;
 
-  const path = decodeURIComponent(url.slice(markerIndex + marker.length));
-  return path.startsWith(`${userId}/profile/`) ? path : null;
+  try {
+    const path = decodeURIComponent(url.slice(markerIndex + marker.length));
+    return path.startsWith(`${userId}/profile/`) ? path : null;
+  } catch {
+    return null;
+  }
 }
 
 function mapProfile(row: UserRow): MyPageProfile {
